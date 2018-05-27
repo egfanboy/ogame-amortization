@@ -16,6 +16,24 @@ export default class Building extends Component {
         return cost.toFixed(2);
     };
 
+    formatProduction = production => {
+        const reverseString = s =>
+            s
+                .split('')
+                .reverse()
+                .join('');
+
+        const productionString = reverseString(production.toString());
+
+        const CHUNK = 3;
+        let chunks = [];
+        for (let i = 0; i < productionString.length; i = i + CHUNK) {
+            chunks = [productionString.substr(i, i + CHUNK), ...chunks];
+        }
+
+        return chunks.map(reverseString).join(',');
+    };
+
     render() {
         const {
             mine,
@@ -29,7 +47,7 @@ export default class Building extends Component {
             <Container>
                 <P>{mine}</P>
                 <P>{level}</P>
-                <P>{newProd}</P>
+                <P>{this.formatProduction(newProd)}</P>
                 <P>{this.formatCost(metalCost)}</P>
                 <P>{this.formatCost(crysCost)}</P>
                 <P>{amortization && amortization}</P>
@@ -43,5 +61,5 @@ const Container = styled.div`
 `;
 
 const P = styled.p`
-    padding: 10px;
+    padding: 5px;
 `;

@@ -1,5 +1,5 @@
 import React, { Fragment } from 'react';
-import Building from './building';
+
 import {
     newMetalProd,
     amortization,
@@ -11,8 +11,11 @@ import {
     metalMineProd,
     crysMineProd,
     deutMineProd,
-} from '../utils/formulas';
-import { UserContext } from '../pages/amortization';
+} from '../../utils/formulas';
+
+import Building from '../building';
+import { PlanetInfo } from '../planet-info';
+import { Main, BuildingContainer, InfoContainer } from './planet.styled';
 
 const calculateNormalizedProduction = (
     { metalMine, crystalMine, deutMine },
@@ -29,53 +32,16 @@ const calculateNormalizedProduction = (
 };
 
 export default class Planet extends React.Component {
-    state = {
-        metalMine: this.props.metalMine,
-        crystalMine: this.props.crystalMine,
-        deutMine: this.props.deutMine,
-        rates: this.props.rates,
-        speed: this.props.speed,
-        normalizedProd: calculateNormalizedProduction(
-            {
-                metalMine: this.props.metalMine,
-                crystalMine: this.props.crystalMine,
-                deutMine: this.props.deutMine,
-            },
-            this.props.speed,
-            this.props.rates
-        ),
+    onChangeHandler = (key, value) => {
+        const { onPlanetChange } = this.props;
+        onPlanetChange(key, value);
     };
 
-    static getDerivedStateFromProps(nextProps, prevState) {
-        const {
-            metalMine: newMetalMine,
-            crystalMine: newCrystalMine,
-            deutMine: newDeutMine,
-            speed: newSpeed,
-            rates: newRates,
-        } = nextProps;
+    getAvgT = () => {
+        const { minT, maxT } = this.props;
 
-        const { metalMine, crystalMine, deutMine, speed, rates } = prevState;
-
-        if (newSpeed !== speed || newRates !== rates)
-            return {
-                speed: newSpeed,
-                rates: newRates,
-            };
-
-        if (
-            newMetalMine !== metalMine ||
-            newCrystalMine !== crystalMine ||
-            newDeutMine !== deutMine
-        )
-            return {
-                metalMine: newMetalMine,
-                crystalMine: newCrystalMine,
-                deutMine: newDeutMine,
-            };
-
-        return null;
-    }
+        return (minT + maxT) / 2;
+    };
 
     calculateMetalAmor = () => {
         const {
@@ -83,7 +49,7 @@ export default class Planet extends React.Component {
             normalizedProd,
             rates: { m, c, d },
             speed,
-        } = this.state;
+        } = this.props;
 
         const metalDeutRatio = d / m;
         const crysDeutRatio = d / c;
@@ -104,7 +70,7 @@ export default class Planet extends React.Component {
             normalizedProd,
             rates: { m, c, d },
             speed,
-        } = this.state;
+        } = this.props;
 
         const metalDeutRatio = d / m;
         const crysDeutRatio = d / c;
@@ -125,7 +91,9 @@ export default class Planet extends React.Component {
             normalizedProd,
             rates: { m, c, d },
             speed,
-        } = this.state;
+            maxT,
+            minT,
+        } = this.props;
 
         const metalDeutRatio = d / m;
         const crysDeutRatio = d / c;
@@ -134,22 +102,40 @@ export default class Planet extends React.Component {
         const normalizedCost =
             metalCost * metalDeutRatio + crysCost * crysDeutRatio;
 
-        const normalizedNewProd = speed * newDeutProd(deutMine);
+        const normalizedNewProd = speed * newDeutProd(deutMine, this.getAvgT());
 
         return amortization(normalizedCost, normalizedNewProd);
     };
 
     render() {
-        const { name, metalMine, crystalMine, deutMine, speed } = this.props;
+        const {
+            name,
+            metalMine,
+            crystalMine,
+            deutMine,
+            speed,
+            minT,
+            maxT,
+        } = this.props;
+
         return (
-            <Fragment>
-                <Fragment>
+            <Main>
+                <InfoContainer>
+                    <PlanetInfo
+                        name={name}
+                        minT={minT}
+                        maxT={maxT}
+                        onChange={this.onChangeHandler}
+                    />
+                </InfoContainer>
+                <BuildingContainer>
                     <Building
-                        mine={'metal'}
+                        mine="metal"
                         level={metalMine}
                         newProd={speed * Math.ceil(newMetalProd(metalMine))}
                         cost={costMetalMine(metalMine)}
                         amortization={this.calculateMetalAmor()}
+                        onChange={this.onChangeHandler}
                     />
                     <Building
                         mine="crystal"
@@ -157,39 +143,21 @@ export default class Planet extends React.Component {
                         newProd={speed * Math.ceil(newCrysProd(crystalMine))}
                         cost={costCrysMine(crystalMine)}
                         amortization={this.calculateCrysAmor()}
+                        onChange={this.onChangeHandler}
                     />
                     <Building
                         mine="deut"
                         level={deutMine}
-                        newProd={speed * Math.ceil(newDeutProd(deutMine))}
+                        newProd={
+                            speed *
+                            Math.ceil(newDeutProd(deutMine, this.getAvgT()))
+                        }
                         cost={costDeutMine(deutMine)}
                         amortization={this.calculateDeutAmor()}
+                        onChange={this.onChangeHandler}
                     />
-                </Fragment>
-            </Fragment>
+                </BuildingContainer>
+            </Main>
         );
     }
 }
-
-//Base of metal? minecost=m+(crys*metalRatio)+(deut*metalRatio);
-//prod=m+crystal*mRation+d*mRatio
-
-/*structure
-Planet {
-    name
-    maxTemp
-    minTemp
-    metalMine
-    crystalMine
-    deutMine
-    //Calculated
-    AvgTemp
-    ?? metalProd
-    ?? crysProd
-    ?? deutProd
-    normalizedProd
-    metalAmor
-    crysAmor
-    deutAmor
-}
-*/
