@@ -4,9 +4,10 @@ import Planet from '../components/planet';
 const planets = [
     {
         name: 'One',
-        maxTemp: '30',
+        maxTemp: '300',
+        minTemp: '10',
         metalMine: 31,
-        crystalMine: 21,
+        crystalMine: 22,
         deutMine: 20,
     },
 ];
@@ -14,9 +15,16 @@ const planets = [
 export const UserContext = createContext('settings');
 
 export default class Amortization extends Component {
-    state = { planets: [] };
+    state = { planets: [], speed: 7, rates: { m: 2, c: 1, d: 1 } };
 
-    buildPlanets = (planet, i) => <Planet key={`${planet}-${i}`} {...planet} />;
+    buildPlanets = (planet, i) => (
+        <Planet
+            key={`${planet}-${i}`}
+            {...planet}
+            speed={this.state.speed}
+            rates={this.state.rates}
+        />
+    );
 
     render() {
         return (
@@ -25,8 +33,8 @@ export default class Amortization extends Component {
                     value={{
                         speed: 7,
                         ratios: {
-                            m: 3,
-                            c: 2,
+                            m: 2,
+                            c: 1,
                             d: 1,
                         },
                     }}
