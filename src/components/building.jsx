@@ -41,11 +41,12 @@ export default class Building extends Component {
             newProd,
             cost: { metalCost, crysCost },
             amortization,
+            isNext,
         } = this.props;
 
         return (
             <Container>
-                <P>{mine}</P>
+                <P isNext={isNext}>{mine}</P>
                 <P>{level}</P>
                 <P>{this.formatProduction(newProd)}</P>
                 <P>{this.formatCost(metalCost)}</P>
@@ -62,4 +63,5 @@ const Container = styled.div`
 
 const P = styled.p`
     padding: 5px;
+    color: ${({ isNext }) => (isNext ? 'red' : 'black')};
 `;

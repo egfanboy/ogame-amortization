@@ -37,6 +37,77 @@ export default class Planet extends React.Component {
         onPlanetChange(key, value);
     };
 
+    state = {
+        crystalAmortization: null,
+        metalAmortization: null,
+        deutAmortization: null,
+        nextBuilding: null,
+    };
+
+    componentDidMount() {
+        this.calculateMetalAmor();
+        this.calculateCrysAmor();
+        this.calculateDeutAmor();
+    }
+
+    componentDidUpdate(prevProps, prevState) {
+        if (
+            prevState.metalAmortization !== this.state.metalAmortization ||
+            prevState.crystalAmortization !== this.state.crystalAmortization ||
+            prevState.deutAmortization !== this.state.deutAmortization
+        )
+            this.getLowestAmortization();
+
+        if (
+            prevProps.metalMine !== this.props.metalMine ||
+            prevProps.crystalMine !== this.props.crystalMine ||
+            prevProps.minT !== this.props.minT ||
+            prevProps.maxT !== this.props.maxT
+        ) {
+            this.calculateMetalAmor();
+            this.calculateCrysAmor();
+            this.calculateDeutAmor();
+        }
+    }
+
+    getLowestAmortization = () => {
+        const { setPlanetNextBuilding, name } = this.props;
+        const {
+            metalAmortization,
+            crysAmortization,
+            deutAmortization,
+        } = this.state;
+
+        const metal = {
+            building: 'metal',
+            value: metalAmortization,
+        };
+        const crystal = {
+            building: 'crystal',
+            value: crysAmortization,
+        };
+        const deut = {
+            building: 'deut',
+            value: deutAmortization,
+        };
+
+        const lowestAmortization = Math.min(
+            metal.value,
+            crystal.value,
+            deut.value
+        );
+
+        const { building: nextBuilding } = [metal, crystal, deut].find(
+            e => e.value === lowestAmortization
+        );
+
+        setPlanetNextBuilding({
+            name,
+            nextBuilding,
+            value: lowestAmortization,
+        });
+    };
+
     getAvgT = () => {
         const { minT, maxT } = this.props;
 
@@ -61,7 +132,12 @@ export default class Planet extends React.Component {
         const normalizedNewProd =
             speed * newMetalProd(metalMine) * metalDeutRatio;
 
-        return amortization(normalizedCost, normalizedNewProd);
+        const metalAmortization = amortization(
+            normalizedCost,
+            normalizedNewProd
+        );
+
+        this.setState({ metalAmortization });
     };
 
     calculateCrysAmor = () => {
@@ -82,7 +158,12 @@ export default class Planet extends React.Component {
         const normalizedNewProd =
             speed * newCrysProd(crystalMine) * crysDeutRatio;
 
-        return amortization(normalizedCost, normalizedNewProd);
+        const crysAmortization = amortization(
+            normalizedCost,
+            normalizedNewProd
+        );
+
+        this.setState({ crysAmortization });
     };
 
     calculateDeutAmor = () => {
@@ -104,7 +185,12 @@ export default class Planet extends React.Component {
 
         const normalizedNewProd = speed * newDeutProd(deutMine, this.getAvgT());
 
-        return amortization(normalizedCost, normalizedNewProd);
+        const deutAmortization = amortization(
+            normalizedCost,
+            normalizedNewProd
+        );
+
+        this.setState({ deutAmortization });
     };
 
     render() {
@@ -116,7 +202,15 @@ export default class Planet extends React.Component {
             speed,
             minT,
             maxT,
+            hasNextBuilding,
+            nextEmpireBuilding,
         } = this.props;
+
+        const {
+            metalAmortization,
+            crysAmortization,
+            deutAmortization,
+        } = this.state;
 
         return (
             <Main>
@@ -134,16 +228,22 @@ export default class Planet extends React.Component {
                         level={metalMine}
                         newProd={speed * Math.ceil(newMetalProd(metalMine))}
                         cost={costMetalMine(metalMine)}
-                        amortization={this.calculateMetalAmor()}
+                        amortization={metalAmortization}
                         onChange={this.onChangeHandler}
+                        isNext={
+                            hasNextBuilding && 'metal' === nextEmpireBuilding
+                        }
                     />
                     <Building
                         mine="crystal"
                         level={crystalMine}
                         newProd={speed * Math.ceil(newCrysProd(crystalMine))}
                         cost={costCrysMine(crystalMine)}
-                        amortization={this.calculateCrysAmor()}
+                        amortization={crysAmortization}
                         onChange={this.onChangeHandler}
+                        isNext={
+                            hasNextBuilding && 'crystal' === nextEmpireBuilding
+                        }
                     />
                     <Building
                         mine="deut"
@@ -153,8 +253,11 @@ export default class Planet extends React.Component {
                             Math.ceil(newDeutProd(deutMine, this.getAvgT()))
                         }
                         cost={costDeutMine(deutMine)}
-                        amortization={this.calculateDeutAmor()}
+                        amortization={deutAmortization}
                         onChange={this.onChangeHandler}
+                        isNext={
+                            hasNextBuilding && 'deut' === nextEmpireBuilding
+                        }
                     />
                 </BuildingContainer>
             </Main>
