@@ -49,7 +49,6 @@ export default class Amortization extends Component {
 
     setEmpireNextBuilding = () => {
         const { amortizations } = this.state;
-        console.count('yikes');
 
         const values = amortizations.reduce(
             (acc, a) => (acc = [a.value, ...acc]),
@@ -129,7 +128,6 @@ export default class Amortization extends Component {
     };
 
     render() {
-        console.log(this.state.amortizations);
         return (
             <PlanetContainer>
                 {this.state.planets.map(this.buildPlanets)}

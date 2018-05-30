@@ -13,7 +13,7 @@ import {
     deutMineProd,
 } from '../../utils/formulas';
 
-import Building from '../building';
+import { Building } from '../building';
 import { PlanetInfo } from '../planet-info';
 import { Main, BuildingContainer, InfoContainer } from './planet.styled';
 
@@ -264,3 +264,27 @@ export default class Planet extends React.Component {
         );
     }
 }
+
+BuildBuildingRows = () => {
+    const { metalMine, crystalMine, deutMine, speed } = this.props;
+    const mines = ['Metal', 'Crystal', 'Deut'];
+
+    const MINE_INFO = {
+        Metal: {
+            calcProd: newMetalProd,
+            level: metalMine,
+            cost: costMetalMine,
+        },
+
+        Crystal: {
+            calcProd: newCrysProd,
+            level: crystalMine,
+            cost: costCrystalMine,
+        },
+        Deut: { calcProd: newDeutProd, level: deutMine, cost: costDeutMine },
+    };
+
+    const result = mines.reduce((acc, mine) => {
+        return acc;
+    }, []);
+};

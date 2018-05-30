@@ -22,7 +22,6 @@ export default class PlanetInfo extends Component {
                 <PlanetName>{name}</PlanetName>
                 <Input
                     label="Max Temp"
-                    type="number"
                     value={maxT}
                     onChange={({ target: { value } }) =>
                         this.validateInput('maxT', value)
@@ -30,7 +29,6 @@ export default class PlanetInfo extends Component {
                 />
                 <Input
                     label="Min Temp"
-                    type="number"
                     value={minT}
                     onChange={({ target: { value } }) =>
                         this.validateInput('minT', value)
