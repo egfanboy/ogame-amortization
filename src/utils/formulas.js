@@ -60,7 +60,13 @@ export function costDeutMine(level) {
 }
 
 export function amortization(normalizedCost, normalizedProduction) {
-    return Math.ceil(
-        normalizedCost / (normalizedProduction * HOUR_DAY_CONVERSION)
-    );
+    const amortization =
+        normalizedCost / (normalizedProduction * HOUR_DAY_CONVERSION);
+
+    //.toFixed() returns a string so we are parsing it to make it a number again
+    if (amortization < 1) {
+        return parseFloat(amortization.toFixed(2));
+    }
+
+    return Math.ceil(amortization);
 }

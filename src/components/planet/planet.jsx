@@ -13,6 +13,8 @@ import {
     deutMineProd,
 } from '../../utils/formulas';
 
+import { formatCost, formatProduction } from '../../utils/format';
+
 import { Building } from '../building';
 import { PlanetInfo } from '../planet-info';
 import { Main, BuildingContainer, InfoContainer } from './planet.styled';
@@ -34,6 +36,7 @@ const calculateNormalizedProduction = (
 export default class Planet extends React.Component {
     onChangeHandler = (key, value) => {
         const { onPlanetChange } = this.props;
+
         onPlanetChange(key, value);
     };
 
@@ -79,23 +82,28 @@ export default class Planet extends React.Component {
         } = this.state;
 
         const metal = {
-            building: 'metal',
+            building: 'Metal',
             value: metalAmortization,
         };
         const crystal = {
-            building: 'crystal',
+            building: 'Crystal',
             value: crysAmortization,
         };
         const deut = {
-            building: 'deut',
+            building: 'Deut',
             value: deutAmortization,
         };
 
-        const lowestAmortization = Math.min(
+        const amortizationValues = [
             metal.value,
             crystal.value,
-            deut.value
-        );
+            deut.value,
+        ].filter(v => !!v);
+
+        // console.log(amortizationValues);
+
+        const lowestAmortization = Math.min(...amortizationValues);
+        // console.log({ lowestAmortization });
 
         const { building: nextBuilding } = [metal, crystal, deut].find(
             e => e.value === lowestAmortization
@@ -131,12 +139,12 @@ export default class Planet extends React.Component {
 
         const normalizedNewProd =
             speed * newMetalProd(metalMine) * metalDeutRatio;
-
+        // console.log(amortization(normalizedCost, normalizedNewProd));
         const metalAmortization = amortization(
             normalizedCost,
             normalizedNewProd
         );
-
+        // console.log({ metalAmortization });
         this.setState({ metalAmortization });
     };
 
@@ -193,6 +201,95 @@ export default class Planet extends React.Component {
         this.setState({ deutAmortization });
     };
 
+    BuildBuildingRows = () => {
+        const {
+            metalMine,
+            crystalMine,
+            deutMine,
+            speed,
+            hasNextBuilding,
+            nextEmpireBuilding,
+        } = this.props;
+
+        const {
+            metalAmortization,
+            crysAmortization,
+            deutAmortization,
+        } = this.state;
+
+        const mines = ['Metal', 'Crystal', 'Deut'];
+
+        const MINE_INFO = {
+            Metal: {
+                calcProd: newMetalProd,
+                level: metalMine,
+                cost: costMetalMine,
+                amortization: metalAmortization,
+            },
+
+            Crystal: {
+                calcProd: newCrysProd,
+                level: crystalMine,
+                cost: costCrysMine,
+                amortization: crysAmortization,
+            },
+            Deut: {
+                calcProd: newDeutProd,
+                level: deutMine,
+                cost: costDeutMine,
+                amortization: deutAmortization,
+            },
+        };
+
+        return mines.reduce((acc, mine) => {
+            const { level, calcProd, cost, amortization } = MINE_INFO[mine];
+
+            if (!level) {
+                const { metalCost, crysCost } = cost(0);
+                return (acc = [
+                    ...acc,
+                    {
+                        building: mine,
+                        mineLevel: { type: 'input', level: '' },
+                        newProd: formatProduction(
+                            speed *
+                                Math.ceil(
+                                    mine === 'Deut'
+                                        ? calcProd(0, this.getAvgT())
+                                        : calcProd(0)
+                                )
+                        ),
+                        metalCost: formatCost(metalCost),
+                        crystalCost: formatCost(crysCost),
+                        amortization: amortization,
+                    },
+                ]);
+            }
+
+            const newProd = formatProduction(
+                speed *
+                    Math.ceil(
+                        mine === 'Deut'
+                            ? calcProd(level, this.getAvgT())
+                            : calcProd(level)
+                    )
+            );
+
+            const { metalCost, crysCost } = cost(level);
+
+            const building = {
+                building: mine,
+                mineLevel: { type: 'input', level },
+                newProd,
+                metalCost: formatCost(metalCost),
+                crystalCost: formatCost(crysCost),
+                amortization: amortization,
+            };
+
+            return (acc = [...acc, building]);
+        }, []);
+    };
+
     render() {
         const {
             name,
@@ -224,29 +321,28 @@ export default class Planet extends React.Component {
                 </InfoContainer>
                 <BuildingContainer>
                     <Building
-                        mine="metal"
-                        level={metalMine}
-                        newProd={speed * Math.ceil(newMetalProd(metalMine))}
-                        cost={costMetalMine(metalMine)}
-                        amortization={metalAmortization}
-                        onChange={this.onChangeHandler}
-                        isNext={
-                            hasNextBuilding && 'metal' === nextEmpireBuilding
+                        hasNextBuilding={hasNextBuilding}
+                        nextBuilding={
+                            hasNextBuilding ? nextEmpireBuilding : null
                         }
-                    />
-                    <Building
-                        mine="crystal"
-                        level={crystalMine}
-                        newProd={speed * Math.ceil(newCrysProd(crystalMine))}
-                        cost={costCrysMine(crystalMine)}
-                        amortization={crysAmortization}
                         onChange={this.onChangeHandler}
-                        isNext={
-                            hasNextBuilding && 'crystal' === nextEmpireBuilding
-                        }
+                        rows={this.BuildBuildingRows()}
+                        headings={[
+                            'Building',
+                            'Level',
+                            'Production Increase',
+                            'Cost Metal',
+                            'Cost Crystal',
+                            'Amortization',
+                        ]}
                     />
-                    <Building
-                        mine="deut"
+                </BuildingContainer>
+            </Main>
+        );
+    }
+}
+
+/*                      mine="deut"
                         level={deutMine}
                         newProd={
                             speed *
@@ -257,34 +353,4 @@ export default class Planet extends React.Component {
                         onChange={this.onChangeHandler}
                         isNext={
                             hasNextBuilding && 'deut' === nextEmpireBuilding
-                        }
-                    />
-                </BuildingContainer>
-            </Main>
-        );
-    }
-}
-
-BuildBuildingRows = () => {
-    const { metalMine, crystalMine, deutMine, speed } = this.props;
-    const mines = ['Metal', 'Crystal', 'Deut'];
-
-    const MINE_INFO = {
-        Metal: {
-            calcProd: newMetalProd,
-            level: metalMine,
-            cost: costMetalMine,
-        },
-
-        Crystal: {
-            calcProd: newCrysProd,
-            level: crystalMine,
-            cost: costCrystalMine,
-        },
-        Deut: { calcProd: newDeutProd, level: deutMine, cost: costDeutMine },
-    };
-
-    const result = mines.reduce((acc, mine) => {
-        return acc;
-    }, []);
-};
+                        }*/

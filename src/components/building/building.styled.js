@@ -23,7 +23,7 @@ export const TableHeading = styled.th`
 `;
 export const RowData = styled.td`
     text-align: left;
-    padding-left: 80px;
+    padding: 5px 60px;
     user-select: none;
     height: 30px;
     color: white;
@@ -32,11 +32,14 @@ export const RowData = styled.td`
 
 export const HeaderRow = styled.tr``;
 export const TableRow = styled.tr`
+    ${RowData} {
+        color: ${({ isNext }) => (isNext ? 'red' : 'black')};
+    }
     &:hover {
         cursor: pointer;
         ${RowData} {
-            color: #333;
+            color: ${({ isNext }) => (isNext ? 'red' : 'black')};
         }
-        background-color: #333;
+        background-color: #000;
     }
 `;
