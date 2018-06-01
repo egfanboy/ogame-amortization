@@ -8,25 +8,24 @@ export const TableContainer = styled.div`
 export const Table = styled.table`
     border-collapse: collapse;
     overflow: ellipsis;
-    background-color: rgba(0, 0, 0, 0.85);
+    background-color: rgba(255, 255, 255, 0.85);
 
     width: 75%;
 `;
 export const TableBody = styled.tbody``;
 export const TableHeading = styled.th`
   height: 30px;
-  font-size:14px;
+  font-size:12px;
   user-select:none;
   text-align: center;
-  color: white;
+  color: black;
   }
 `;
 export const RowData = styled.td`
     text-align: left;
-    padding: 5px 60px;
+    padding: 5px 40px;
     user-select: none;
     height: 30px;
-    color: white;
     font-size: 12px;
 `;
 
@@ -40,6 +39,6 @@ export const TableRow = styled.tr`
         ${RowData} {
             color: ${({ isNext }) => (isNext ? 'red' : 'black')};
         }
-        background-color: #000;
+        background-color: pink;
     }
 `;

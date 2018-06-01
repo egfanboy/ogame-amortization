@@ -1,7 +1,9 @@
-import React, { Component, Fragment, createContext } from 'react';
+import React, { Component, Fragment } from 'react';
 
+import { metalMineProd, crysMineProd, deutMineProd } from '../utils/formulas';
 import styled from 'styled-components';
 import { Planet } from '../components/planet';
+import { NextLevel } from '../components/next-levels';
 
 const planets = [
     {
@@ -30,8 +32,6 @@ const planets = [
     },
 ];
 
-export const UserContext = createContext('settings');
-
 export default class Amortization extends Component {
     state = {
         planets: planets,
@@ -41,11 +41,67 @@ export default class Amortization extends Component {
         nextBuilding: [],
     };
 
+    componentDidMount() {
+        this.calculatePlasmaAmor();
+    }
+
     componentDidUpdate(prevProps, prevState) {
         if (prevState.amortizations !== this.state.amortizations) {
             this.setEmpireNextBuilding();
         }
     }
+
+    calculateNextBuildings = times => {};
+
+    calculatePlasmaAmor = () => {
+        const { speed } = this.state;
+
+        const accountProduction = planets.reduce((acc, planet) => {
+            const {
+                accountMetalProd,
+                accountCrystalProd,
+                accountDeutProd,
+            } = acc;
+
+            const { metalMine, crystalMine, deutMine } = planet;
+            // console.log({ metalMine, crystalMine, deutMine });
+
+            const getMetalProd = () => {
+                const prod = metalMineProd(metalMine);
+
+                return isNaN(accountMetalProd) ? prod : accountMetalProd + prod;
+            };
+
+            const getCrystalProd = () => {
+                const prod = crysMineProd(crystalMine);
+                console.log(prod);
+                return isNaN(accountCrystalProd)
+                    ? prod
+                    : accountCrystalProd + prod;
+            };
+            const getDeutProd = () => {
+                const prod = deutMineProd(deutMine);
+
+                return isNaN(accountDeutProd) ? prod : accountDeutProd + prod;
+            };
+
+            return {
+                accountMetalProd: getMetalProd(),
+                accountCrystalProd: getCrystalProd(),
+                accountDeutProd: getDeutProd(),
+            };
+        }, {});
+        console.log({ accountProduction });
+
+        const normalizedAccountProduction = Object.entries(
+            accountProduction
+        ).reduce((acc, [key, value]) => {
+            return (acc = Object.assign(acc, { [key]: speed * value }));
+        }, {});
+
+        console.log({ normalizedAccountProduction });
+        // console.log({ accountMetalProd, accountCrystalProd, accountDeutProd });
+    };
 
     setEmpireNextBuilding = () => {
         const { amortizations } = this.state;
@@ -62,12 +118,15 @@ export default class Amortization extends Component {
     };
 
     onPlanetChange = planetNumb => (key, value) => {
-        this.setState(state => {
-            return (state.planets[planetNumb] = Object.assign(
-                state.planets[planetNumb],
-                { [key]: value }
-            ));
-        });
+        this.setState(
+            state => {
+                return (state.planets[planetNumb] = Object.assign(
+                    state.planets[planetNumb],
+                    { [key]: value }
+                ));
+            },
+            () => this.calculatePlasmaAmor()
+        );
     };
 
     setPlanetNextBuilding = planet => {
@@ -128,10 +187,14 @@ export default class Amortization extends Component {
     };
 
     render() {
+        console.log(this.state.nextBuilding);
         return (
-            <PlanetContainer>
-                {this.state.planets.map(this.buildPlanets)}
-            </PlanetContainer>
+            <Main>
+                <PlanetContainer>
+                    {this.state.planets.map(this.buildPlanets)}
+                </PlanetContainer>
+                <NextLevel next={this.state.nextBuilding} />
+            </Main>
         );
     }
 }
@@ -139,6 +202,11 @@ export default class Amortization extends Component {
 const PlanetContainer = styled.div`
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
+    padding-left: 200px;
+`;
+
+const Main = styled.div`
+    display: flex;
 `;

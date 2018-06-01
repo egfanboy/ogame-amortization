@@ -34,7 +34,6 @@ export default class Building extends Component {
     buildRows = ({ ...row }, index) => {
         const { hasNextBuilding, nextBuilding } = this.props;
         const mine = row.building;
-        console.log(hasNextBuilding, nextBuilding, mine);
 
         return (
             <TableRow
@@ -66,7 +65,7 @@ export default class Building extends Component {
 
     render() {
         const { headings, rows, className } = this.props;
-        console.log(this.props.nextBuilding);
+
         return (
             <TableContainer className={className}>
                 <Table>

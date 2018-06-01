@@ -64,6 +64,7 @@ export default class Planet extends React.Component {
         if (
             prevProps.metalMine !== this.props.metalMine ||
             prevProps.crystalMine !== this.props.crystalMine ||
+            prevProps.deutMine !== this.props.deutMine ||
             prevProps.minT !== this.props.minT ||
             prevProps.maxT !== this.props.maxT
         ) {
@@ -100,10 +101,7 @@ export default class Planet extends React.Component {
             deut.value,
         ].filter(v => !!v);
 
-        // console.log(amortizationValues);
-
         const lowestAmortization = Math.min(...amortizationValues);
-        // console.log({ lowestAmortization });
 
         const { building: nextBuilding } = [metal, crystal, deut].find(
             e => e.value === lowestAmortization
@@ -139,12 +137,12 @@ export default class Planet extends React.Component {
 
         const normalizedNewProd =
             speed * newMetalProd(metalMine) * metalDeutRatio;
-        // console.log(amortization(normalizedCost, normalizedNewProd));
+
         const metalAmortization = amortization(
             normalizedCost,
             normalizedNewProd
         );
-        // console.log({ metalAmortization });
+
         this.setState({ metalAmortization });
     };
 
@@ -341,16 +339,3 @@ export default class Planet extends React.Component {
         );
     }
 }
-
-/*                      mine="deut"
-                        level={deutMine}
-                        newProd={
-                            speed *
-                            Math.ceil(newDeutProd(deutMine, this.getAvgT()))
-                        }
-                        cost={costDeutMine(deutMine)}
-                        amortization={deutAmortization}
-                        onChange={this.onChangeHandler}
-                        isNext={
-                            hasNextBuilding && 'deut' === nextEmpireBuilding
-                        }*/
