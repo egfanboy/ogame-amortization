@@ -59,6 +59,28 @@ export function costDeutMine(level) {
     return { metalCost, crysCost };
 }
 
+export function metalPlasmaIncrease(metalProduction, level) {
+    return metalProduction * (0.01 * (level + 1));
+}
+
+export function crystalPlasmaIncrease(crystalProduction, level) {
+    return crystalProduction * (0.0066 * (level + 1));
+}
+
+export function deutPlasmaIncrease(deutProduction, level) {
+    return deutProduction * (0.0033 * (level + 1));
+}
+
+//Formula=base cost *2 exp(level)
+
+export function plasmaCost(level) {
+    const metalCost = 2000 * pow(2, level);
+    const crystalCost = 4000 * pow(2, level);
+    const deutCost = 1000 * pow(2, level);
+
+    return { metalCost, crystalCost, deutCost };
+}
+
 export function amortization(normalizedCost, normalizedProduction) {
     const amortization =
         normalizedCost / (normalizedProduction * HOUR_DAY_CONVERSION);

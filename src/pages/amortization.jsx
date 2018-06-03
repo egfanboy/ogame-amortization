@@ -1,6 +1,15 @@
 import React, { Component, Fragment } from 'react';
 
-import { metalMineProd, crysMineProd, deutMineProd } from '../utils/formulas';
+import {
+    metalMineProd,
+    crysMineProd,
+    deutMineProd,
+    plasmaCost,
+    metalPlasmaIncrease,
+    crystalPlasmaIncrease,
+    deutPlasmaIncrease,
+    amortization,
+} from '../utils/formulas';
 import styled from 'styled-components';
 import { Planet } from '../components/planet';
 import { NextLevel } from '../components/next-levels';
@@ -39,6 +48,7 @@ export default class Amortization extends Component {
         rates: { m: 2, c: 1, d: 1 },
         amortizations: [],
         nextBuilding: [],
+        plasmaLevel: 0,
     };
 
     componentDidMount() {
@@ -54,7 +64,11 @@ export default class Amortization extends Component {
     calculateNextBuildings = times => {};
 
     calculatePlasmaAmor = () => {
-        const { speed } = this.state;
+        const {
+            speed,
+            plasmaLevel,
+            rates: { m, c, d },
+        } = this.state;
 
         const accountProduction = planets.reduce((acc, planet) => {
             const {
@@ -64,7 +78,6 @@ export default class Amortization extends Component {
             } = acc;
 
             const { metalMine, crystalMine, deutMine } = planet;
-            // console.log({ metalMine, crystalMine, deutMine });
 
             const getMetalProd = () => {
                 const prod = metalMineProd(metalMine);
@@ -91,7 +104,6 @@ export default class Amortization extends Component {
                 accountDeutProd: getDeutProd(),
             };
         }, {});
-        console.log({ accountProduction });
 
         const normalizedAccountProduction = Object.entries(
             accountProduction
@@ -99,21 +111,59 @@ export default class Amortization extends Component {
             return (acc = Object.assign(acc, { [key]: speed * value }));
         }, {});
 
-        console.log({ normalizedAccountProduction });
-        // console.log({ accountMetalProd, accountCrystalProd, accountDeutProd });
+        const {
+            accountMetalProd,
+            accountCrystalProd,
+            accountDeutProd,
+        } = normalizedAccountProduction;
+
+        const metalProductionIncrease = metalPlasmaIncrease(
+            accountMetalProd,
+            plasmaLevel
+        );
+        const crystalProductionIncrease = crystalPlasmaIncrease(
+            accountCrystalProd,
+            plasmaLevel
+        );
+        const deutProductionIncrease = deutPlasmaIncrease(
+            accountDeutProd,
+            plasmaLevel
+        );
+
+        const { metalCost, crystalCost, deutCost } = plasmaCost(plasmaLevel);
+
+        const metalDeutRatio = d / m;
+        const crysDeutRatio = d / c;
+        const normalizedCost =
+            metalCost * metalDeutRatio + crystalCost * crysDeutRatio + deutCost;
+
+        const normalizedProductionIncrease =
+            metalProductionIncrease * metalDeutRatio +
+            crystalProductionIncrease * crysDeutRatio +
+            deutProductionIncrease;
+
+        const plasmaAmortization = amortization(
+            normalizedCost,
+            normalizedProductionIncrease
+        );
+
+        this.setState({ plasmaAmortization });
     };
 
     setEmpireNextBuilding = () => {
-        const { amortizations } = this.state;
+        const { amortizations, plasmaAmortization } = this.state;
 
         const values = amortizations.reduce(
             (acc, a) => (acc = [a.value, ...acc]),
             []
         );
 
-        const lowest = Math.min(...values);
+        const lowestBuilding = Math.min(...values);
 
-        const planets = amortizations.filter(e => e.value === lowest);
+        if (plasmaAmortization < lowestBuilding)
+            return this.setState({ nextBuilding: 'plasma' });
+
+        const planets = amortizations.filter(e => e.value === lowestBuilding);
         this.setState({ nextBuilding: planets });
     };
 
@@ -158,13 +208,13 @@ export default class Amortization extends Component {
 
     hasNextBuilding = name => {
         const { nextBuilding } = this.state;
-
+        if (nextBuilding === 'plasma') return false;
         return !!nextBuilding.find(e => e.name === name);
     };
 
     getNextBuilding = name => {
         const { nextBuilding } = this.state;
-
+        if (nextBuilding === 'plasma') return;
         return nextBuilding.filter(e => e.name === name).pop().nextBuilding;
     };
 
@@ -187,7 +237,6 @@ export default class Amortization extends Component {
     };
 
     render() {
-        console.log(this.state.nextBuilding);
         return (
             <Main>
                 <PlanetContainer>

@@ -8,7 +8,10 @@ export default class NextLevel extends Component {
 
         if (!next.length) return null;
         // console.log(next);
-        const { name, nextBuilding } = next.pop();
+        const { name, nextBuilding } =
+            typeof next === 'array'
+                ? next.pop()
+                : { name: '-', nextBuilding: next };
         return <p>{`Planet:${name} building:${nextBuilding}.`}</p>;
     }
 }
