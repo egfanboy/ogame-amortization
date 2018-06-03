@@ -2,10 +2,10 @@ export const formatCost = cost => {
     const MILLION_UNITS = Math.pow(10, 6);
     const THOUSAND_UNITS = Math.pow(10, 3);
 
-    if (cost / MILLION_UNITS > 1)
+    if (cost / MILLION_UNITS >= 1)
         return `${(cost / MILLION_UNITS).toPrecision(4)}kk`;
 
-    if (cost / THOUSAND_UNITS > 1)
+    if (cost / THOUSAND_UNITS >= 1)
         return `${(cost / THOUSAND_UNITS).toPrecision(4)}k`;
 
     return cost.toFixed(2);

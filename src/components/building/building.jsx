@@ -15,6 +15,10 @@ import {
 } from './building.styled';
 
 export default class Building extends Component {
+    static defaultProps = {
+        headings: [],
+        rows: [],
+    };
     onChangeHandler = building => e => {
         const getKey = b => {
             if (b === 'Metal') return 'metalMine';

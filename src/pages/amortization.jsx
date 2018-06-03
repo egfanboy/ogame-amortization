@@ -13,6 +13,7 @@ import {
 import styled from 'styled-components';
 import { Planet } from '../components/planet';
 import { NextLevel } from '../components/next-levels';
+import { Plasma } from '../components/plasma';
 
 const planets = [
     {
@@ -49,6 +50,9 @@ export default class Amortization extends Component {
         amortizations: [],
         nextBuilding: [],
         plasmaLevel: 0,
+        metalProductionIncrease: 0,
+        crystalProductionIncrease: 0,
+        deutProductionIncrease: 0,
     };
 
     componentDidMount() {
@@ -130,6 +134,12 @@ export default class Amortization extends Component {
             plasmaLevel
         );
 
+        this.setState({
+            metalProductionIncrease,
+            crystalProductionIncrease,
+            deutProductionIncrease,
+        });
+
         const { metalCost, crystalCost, deutCost } = plasmaCost(plasmaLevel);
 
         const metalDeutRatio = d / m;
@@ -141,6 +151,9 @@ export default class Amortization extends Component {
             metalProductionIncrease * metalDeutRatio +
             crystalProductionIncrease * crysDeutRatio +
             deutProductionIncrease;
+
+        if (plasmaLevel === 1 || '1')
+            console.log(normalizedProductionIncrease, normalizedCost);
 
         const plasmaAmortization = amortization(
             normalizedCost,
@@ -165,6 +178,11 @@ export default class Amortization extends Component {
 
         const planets = amortizations.filter(e => e.value === lowestBuilding);
         this.setState({ nextBuilding: planets });
+    };
+
+    onPlasmaLevelChange = level => {
+        const plasmaLevel = level === '' ? '' : parseInt(level);
+        this.setState({ plasmaLevel }, () => this.calculatePlasmaAmor());
     };
 
     onPlanetChange = planetNumb => (key, value) => {
@@ -237,12 +255,30 @@ export default class Amortization extends Component {
     };
 
     render() {
+        const {
+            metalProductionIncrease,
+            crystalProductionIncrease,
+            deutProductionIncrease,
+            plasmaLevel,
+            plasmaAmortization,
+            nextBuilding,
+        } = this.state;
+
         return (
             <Main>
                 <PlanetContainer>
                     {this.state.planets.map(this.buildPlanets)}
+                    <Plasma
+                        metalProductionIncrease={metalProductionIncrease}
+                        crystalProductionIncrease={crystalProductionIncrease}
+                        deutProductionIncrease={deutProductionIncrease}
+                        level={plasmaLevel}
+                        onChange={this.onPlasmaLevelChange}
+                        amortization={plasmaAmortization}
+                        isNext={nextBuilding === 'plasma'}
+                    />
                 </PlanetContainer>
-                <NextLevel next={this.state.nextBuilding} />
+                <NextLevel next={nextBuilding} />
             </Main>
         );
     }

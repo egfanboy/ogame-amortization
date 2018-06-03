@@ -74,9 +74,13 @@ export function deutPlasmaIncrease(deutProduction, level) {
 //Formula=base cost *2 exp(level)
 
 export function plasmaCost(level) {
-    const metalCost = 2000 * pow(2, level);
-    const crystalCost = 4000 * pow(2, level);
-    const deutCost = 1000 * pow(2, level);
+    const multiplier = pow(2, level || 0);
+
+    console.log(multiplier);
+
+    const metalCost = 2000 * multiplier;
+    const crystalCost = 4000 * multiplier;
+    const deutCost = 1000 * multiplier;
 
     return { metalCost, crystalCost, deutCost };
 }
