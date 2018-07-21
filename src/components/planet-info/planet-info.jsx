@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
 import { Input } from '../input';
 
-import { PlanetName, Main, AverageTemp } from './planet-info.styled';
+import { PlanetName, Main, TempContainer } from './planet-info.styled';
+
 import { isInt } from 'validator';
 
 export default class PlanetInfo extends Component {
@@ -15,27 +16,29 @@ export default class PlanetInfo extends Component {
     };
 
     render() {
-        const { name, maxT, minT, onChange } = this.props;
+        const { name, maxT, minT } = this.props;
 
         return (
             <Main>
                 <PlanetName>{name}</PlanetName>
-                <Input
-                    label="Max Temp"
-                    value={maxT}
-                    onChange={({ target: { value } }) =>
-                        this.validateInput('maxT', value)
-                    }
-                />
-                <Input
-                    label="Min Temp"
-                    value={minT}
-                    onChange={({ target: { value } }) =>
-                        this.validateInput('minT', value)
-                    }
-                />
-                <AverageTemp>{`Average temp: ${(minT + maxT) /
-                    2}`}</AverageTemp>
+                <TempContainer>
+                    <Input
+                        width="30"
+                        label="Max Temp"
+                        value={maxT}
+                        onChange={({ target: { value } }) =>
+                            this.validateInput('maxT', value)
+                        }
+                    />
+                    <Input
+                        width="30"
+                        label="Min Temp"
+                        value={minT}
+                        onChange={({ target: { value } }) =>
+                            this.validateInput('minT', value)
+                        }
+                    />
+                </TempContainer>
             </Main>
         );
     }

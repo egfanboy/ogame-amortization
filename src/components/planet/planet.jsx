@@ -127,14 +127,12 @@ export default class Planet extends React.Component {
 
         return (
             <Main>
-                <InfoContainer>
-                    <PlanetInfo
-                        name={name}
-                        minT={minT}
-                        maxT={maxT}
-                        onChange={this.onChangeHandler}
-                    />
-                </InfoContainer>
+                <PlanetInfo
+                    name={name}
+                    minT={minT}
+                    maxT={maxT}
+                    onChange={this.onChangeHandler}
+                />
                 <BuildingContainer>
                     <Building
                         hasNextBuilding={hasNextBuilding}

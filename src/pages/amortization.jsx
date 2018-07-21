@@ -16,6 +16,7 @@ import {
     deutPlasmaIncrease,
     amortization,
 } from '../utils/formulas';
+
 import getBuildingQueue from '../utils/get-building-queue';
 import styled from 'styled-components';
 import { Planet } from '../components/planet';
@@ -167,8 +168,8 @@ export default class Amortization extends Component {
         return nextBuilding;
     };
 
-    componentDidMount() {
-        getBuildingQueue(
+    onUpdate = () => {
+        const queue = getBuildingQueue(
             this.state.planets,
             this.calculateAmortizations,
             this.getLowestAmortization,
@@ -176,7 +177,11 @@ export default class Amortization extends Component {
         );
         const amortizations = this.calculateAmortizations(this.state.planets);
         const lowestAmortization = this.getLowestAmortization(amortizations);
-        this.setState({ nextBuilding: lowestAmortization });
+        this.setState({ nextBuilding: lowestAmortization, queue });
+    };
+
+    componentDidMount() {
+        this.onUpdate();
     }
 
     calculateNextBuildings = times => {};
@@ -276,21 +281,8 @@ export default class Amortization extends Component {
     };
 
     onPlasmaLevelChange = level => {
-        console.log(level);
         const plasmaLevel = level === '' ? '' : parseInt(level);
-        this.setState({ plasmaLevel }, () => {
-            const amortizations = this.calculateAmortizations(
-                this.state.planets
-            );
-            const lowestAmortization = this.getLowestAmortization(
-                amortizations
-            );
-            this.setState({ nextBuilding: lowestAmortization });
-        });
-    };
-
-    bumpPlasmaLevel = () => {
-        this.onPlasmaLevelChange(this.state.plasmaLevel + 1);
+        this.setState({ plasmaLevel }, () => this.onUpdate());
     };
 
     onPlanetChange = planetNumb => (key, value) => {
@@ -301,15 +293,7 @@ export default class Amortization extends Component {
                     { [key]: value }
                 ));
             },
-            () => {
-                const amortizations = this.calculateAmortizations(
-                    this.state.planets
-                );
-                const lowestAmortization = this.getLowestAmortization(
-                    amortizations
-                );
-                this.setState({ nextBuilding: lowestAmortization });
-            }
+            () => this.onUpdate()
         );
     };
 
@@ -346,6 +330,7 @@ export default class Amortization extends Component {
             plasmaLevel,
             plasmaAmortization,
             nextBuilding,
+            queue,
         } = this.state;
 
         return (
@@ -362,7 +347,7 @@ export default class Amortization extends Component {
                         isNext={nextBuilding.type === 'Plasma'}
                     />
                 </PlanetContainer>
-                <NextLevel next={nextBuilding} />
+                <NextLevel next={nextBuilding} queue={queue} />
             </Main>
         );
     }
@@ -371,11 +356,12 @@ export default class Amortization extends Component {
 const PlanetContainer = styled.div`
     display: flex;
     flex-direction: column;
+    justify-content: flex-start;
     align-items: flex-start;
-    justify-content: center;
-    padding-left: 200px;
+    width: 450px;
 `;
 
 const Main = styled.div`
     display: flex;
+    justify-content: space-around;
 `;

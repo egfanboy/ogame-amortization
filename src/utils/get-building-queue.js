@@ -1,33 +1,39 @@
 export default function(
-    planets,
+    allPlanets,
     getAmortization,
     getLowestAmortization,
-    plasmaLevel
+    plasmaLvl,
+    projectionAmount = 25
 ) {
-    let x = [];
-    let p = [...planets];
-    let plasma = plasmaLevel;
+    let queue = [];
+    let planets = [...allPlanets];
+    let plasmaLevel = plasmaLvl;
+    let nextLevel;
 
-    for (let i = 0; i < 10; i++) {
-        const amortizations = getAmortization(p);
-        const y = getLowestAmortization(amortizations, plasma);
-        x = [...x, y];
+    for (let i = 0; i < projectionAmount; i++) {
+        const amortizations = getAmortization(planets);
+        const nextBuilding = getLowestAmortization(amortizations, plasmaLevel);
 
-        const index = p.findIndex(planet => {
-            console.log(y.planet, planet.name);
-            return planet.name === y.planet;
-        });
+        const index = planets.findIndex(
+            planet => planet.name === nextBuilding.planet
+        );
 
-        if (y.type === 'Plasma') {
-            plasma++;
+        if (nextBuilding.type === 'Plasma') nextLevel = ++plasmaLevel;
+
+        if (nextBuilding.type !== 'Plasma') {
+            const currentMine = `${nextBuilding.type.toLowerCase()}Mine`;
+            const mineUpgradeLevel = planets[index][currentMine] + 1;
+            nextLevel = mineUpgradeLevel;
+
+            planets[index] = Object.assign({}, planets[index], {
+                [currentMine]: mineUpgradeLevel,
+            });
         }
 
-        if (y.type !== 'Plasma')
-            p[index] = Object.assign({}, p[index], {
-                [`${y.type.toLowerCase()}Mine`]:
-                    p[index][`${y.type.toLowerCase()}Mine`] + 1,
-            });
+        queue = [
+            ...queue,
+            Object.assign({}, nextBuilding, { level: nextLevel }),
+        ];
     }
-
-    console.log(x);
+    return queue;
 }
