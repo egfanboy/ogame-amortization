@@ -16,6 +16,7 @@ import {
     deutPlasmaIncrease,
     amortization,
 } from '../utils/formulas';
+import getBuildingQueue from '../utils/get-building-queue';
 import styled from 'styled-components';
 import { Planet } from '../components/planet';
 import { NextLevel } from '../components/next-levels';
@@ -33,7 +34,7 @@ const planets = [
         name: 'One',
         maxT: 50,
         minT: 10,
-        metalMine: 1,
+        metalMine: 25,
         crystalMine: 22,
         deutMine: 20,
     },
@@ -127,7 +128,7 @@ export default class Amortization extends Component {
         return amortizations.length > 1 ? amortizations : amortizations[0];
     };
 
-    getLowestAmortization = amortizations => {
+    getLowestAmortization = (amortizations, plasmaLevel) => {
         const nextBuilding = amortizations.reduce((acc, planetAmor) => {
             const planetName = Object.keys(planetAmor)[0];
 
@@ -154,7 +155,7 @@ export default class Amortization extends Component {
             return acc;
         }, {});
 
-        const plasmaAmortization = this.calculatePlasmaAmor();
+        const plasmaAmortization = this.calculatePlasmaAmor(plasmaLevel);
 
         if (plasmaAmortization < nextBuilding.value)
             return {
@@ -167,6 +168,12 @@ export default class Amortization extends Component {
     };
 
     componentDidMount() {
+        getBuildingQueue(
+            this.state.planets,
+            this.calculateAmortizations,
+            this.getLowestAmortization,
+            this.state.plasmaLevel
+        );
         const amortizations = this.calculateAmortizations(this.state.planets);
         const lowestAmortization = this.getLowestAmortization(amortizations);
         this.setState({ nextBuilding: lowestAmortization });
@@ -174,10 +181,10 @@ export default class Amortization extends Component {
 
     calculateNextBuildings = times => {};
 
-    calculatePlasmaAmor = () => {
+    calculatePlasmaAmor = (plasmaLevel = this.state.plasmaLevel) => {
         const {
             speed,
-            plasmaLevel,
+            planets,
             rates: { m, c, d },
         } = this.state;
 
@@ -269,6 +276,7 @@ export default class Amortization extends Component {
     };
 
     onPlasmaLevelChange = level => {
+        console.log(level);
         const plasmaLevel = level === '' ? '' : parseInt(level);
         this.setState({ plasmaLevel }, () => {
             const amortizations = this.calculateAmortizations(
@@ -279,6 +287,10 @@ export default class Amortization extends Component {
             );
             this.setState({ nextBuilding: lowestAmortization });
         });
+    };
+
+    bumpPlasmaLevel = () => {
+        this.onPlasmaLevelChange(this.state.plasmaLevel + 1);
     };
 
     onPlanetChange = planetNumb => (key, value) => {
