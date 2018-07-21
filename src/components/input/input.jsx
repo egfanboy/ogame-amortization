@@ -10,12 +10,14 @@ export default class Input extends Component {
             type = 'text',
             width,
             height,
+            className,
         } = this.props;
 
         return (
             <Fragment>
-                {label && <Label>{label}</Label>}
+                {label && <Label className={className}>{label}</Label>}
                 <StyledInput
+                    className={className}
                     width={width}
                     height={height}
                     value={value}

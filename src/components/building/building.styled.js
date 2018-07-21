@@ -8,22 +8,34 @@ export const TableContainer = styled.div`
 export const Table = styled.table`
     border-collapse: collapse;
     overflow: ellipsis;
-    background-color: rgba(255, 255, 255, 0.85);
+    background-color: white;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
 
+    & th:first-child {
+        border-top-left-radius: 4px;
+    }
+    & th:last-child {
+        border-top-right-radius: 4px;
+    }
     width: 75%;
 `;
 export const TableBody = styled.tbody``;
 export const TableHeading = styled.th`
   height: 30px;
-  font-size:12px;
+  width:30px;
+  font-size:10px;
   user-select:none;
   text-align: center;
   color: black;
+ background-color:blue;
+
+
   }
 `;
 export const RowData = styled.td`
     text-align: left;
-    padding: 5px 40px;
+
     user-select: none;
     height: 30px;
     font-size: 12px;

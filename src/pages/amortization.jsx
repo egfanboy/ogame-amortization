@@ -16,6 +16,8 @@ import {
     deutPlasmaIncrease,
     amortization,
 } from '../utils/formulas';
+
+import getBuildingQueue from '../utils/get-building-queue';
 import styled from 'styled-components';
 import { Planet } from '../components/planet';
 import { NextLevel } from '../components/next-levels';
@@ -33,7 +35,7 @@ const planets = [
         name: 'One',
         maxT: 50,
         minT: 10,
-        metalMine: 1,
+        metalMine: 25,
         crystalMine: 22,
         deutMine: 20,
     },
@@ -127,7 +129,7 @@ export default class Amortization extends Component {
         return amortizations.length > 1 ? amortizations : amortizations[0];
     };
 
-    getLowestAmortization = amortizations => {
+    getLowestAmortization = (amortizations, plasmaLevel) => {
         const nextBuilding = amortizations.reduce((acc, planetAmor) => {
             const planetName = Object.keys(planetAmor)[0];
 
@@ -154,7 +156,7 @@ export default class Amortization extends Component {
             return acc;
         }, {});
 
-        const plasmaAmortization = this.calculatePlasmaAmor();
+        const plasmaAmortization = this.calculatePlasmaAmor(plasmaLevel);
 
         if (plasmaAmortization < nextBuilding.value)
             return {
@@ -166,18 +168,28 @@ export default class Amortization extends Component {
         return nextBuilding;
     };
 
-    componentDidMount() {
+    onUpdate = () => {
+        const queue = getBuildingQueue(
+            this.state.planets,
+            this.calculateAmortizations,
+            this.getLowestAmortization,
+            this.state.plasmaLevel
+        );
         const amortizations = this.calculateAmortizations(this.state.planets);
         const lowestAmortization = this.getLowestAmortization(amortizations);
-        this.setState({ nextBuilding: lowestAmortization });
+        this.setState({ nextBuilding: lowestAmortization, queue });
+    };
+
+    componentDidMount() {
+        this.onUpdate();
     }
 
     calculateNextBuildings = times => {};
 
-    calculatePlasmaAmor = () => {
+    calculatePlasmaAmor = (plasmaLevel = this.state.plasmaLevel) => {
         const {
             speed,
-            plasmaLevel,
+            planets,
             rates: { m, c, d },
         } = this.state;
 
@@ -270,15 +282,7 @@ export default class Amortization extends Component {
 
     onPlasmaLevelChange = level => {
         const plasmaLevel = level === '' ? '' : parseInt(level);
-        this.setState({ plasmaLevel }, () => {
-            const amortizations = this.calculateAmortizations(
-                this.state.planets
-            );
-            const lowestAmortization = this.getLowestAmortization(
-                amortizations
-            );
-            this.setState({ nextBuilding: lowestAmortization });
-        });
+        this.setState({ plasmaLevel }, () => this.onUpdate());
     };
 
     onPlanetChange = planetNumb => (key, value) => {
@@ -289,15 +293,7 @@ export default class Amortization extends Component {
                     { [key]: value }
                 ));
             },
-            () => {
-                const amortizations = this.calculateAmortizations(
-                    this.state.planets
-                );
-                const lowestAmortization = this.getLowestAmortization(
-                    amortizations
-                );
-                this.setState({ nextBuilding: lowestAmortization });
-            }
+            () => this.onUpdate()
         );
     };
 
@@ -334,6 +330,7 @@ export default class Amortization extends Component {
             plasmaLevel,
             plasmaAmortization,
             nextBuilding,
+            queue,
         } = this.state;
 
         return (
@@ -350,7 +347,7 @@ export default class Amortization extends Component {
                         isNext={nextBuilding.type === 'Plasma'}
                     />
                 </PlanetContainer>
-                <NextLevel next={nextBuilding} />
+                <NextLevel next={nextBuilding} queue={queue} />
             </Main>
         );
     }
@@ -359,11 +356,12 @@ export default class Amortization extends Component {
 const PlanetContainer = styled.div`
     display: flex;
     flex-direction: column;
+    justify-content: flex-start;
     align-items: flex-start;
-    justify-content: center;
-    padding-left: 200px;
+    width: 450px;
 `;
 
 const Main = styled.div`
     display: flex;
+    justify-content: space-around;
 `;

@@ -1,15 +1,22 @@
-import React, { Component } from 'react';
+import React from 'react';
 
-export default class NextLevel extends Component {
+import { Main } from './next-level.styled';
+
+export default class NextLevel extends React.Component {
+    static defaultProps = { queue: [] };
     render() {
-        const { next } = this.props;
+        const { queue } = this.props;
 
-        if (!next.length) return null;
-
-        const { name, nextBuilding } =
-            typeof next === 'object'
-                ? next.pop()
-                : { name: '-', nextBuilding: next };
-        return <p>{`Planet:${name} building:${nextBuilding}.`}</p>;
+        return (
+            <Main>
+                {queue.map((building, i) => (
+                    <p key={`${building.type}-${i}`}>
+                        {`Planet:${building.planet} Mine:${building.type} ${
+                            building.level
+                        }`}
+                    </p>
+                ))}
+            </Main>
+        );
     }
 }
