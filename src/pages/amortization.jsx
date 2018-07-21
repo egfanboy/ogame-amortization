@@ -1,9 +1,15 @@
-import React, { Component, Fragment } from 'react';
+import React, { Component } from 'react';
 
 import {
     metalMineProd,
     crysMineProd,
     deutMineProd,
+    newMetalProd,
+    newCrysProd,
+    newDeutProd,
+    costDeutMine,
+    costCrysMine,
+    costMetalMine,
     plasmaCost,
     metalPlasmaIncrease,
     crystalPlasmaIncrease,
@@ -14,6 +20,13 @@ import styled from 'styled-components';
 import { Planet } from '../components/planet';
 import { NextLevel } from '../components/next-levels';
 import { Plasma } from '../components/plasma';
+import getAmortizations from '../utils/get-amortizations';
+
+const BUILDING_TYPES = {
+    m: 'Metal',
+    c: 'Crystal',
+    d: 'Deut',
+};
 
 const planets = [
     {
@@ -47,22 +60,116 @@ export default class Amortization extends Component {
         planets: planets,
         speed: 7,
         rates: { m: 2, c: 1, d: 1 },
-        amortizations: [],
-        nextBuilding: [],
+        nextBuilding: {},
         plasmaLevel: 0,
         metalProductionIncrease: 0,
         crystalProductionIncrease: 0,
         deutProductionIncrease: 0,
     };
 
-    componentDidMount() {
-        this.calculatePlasmaAmor();
-    }
+    calculateAmortizations = planets => {
+        const {
+            speed,
+            rates: { m, c, d },
+        } = this.state;
 
-    componentDidUpdate(prevProps, prevState) {
-        if (prevState.amortizations !== this.state.amortizations) {
-            this.setEmpireNextBuilding();
-        }
+        const metalDeutRatio = d / m;
+        const crysDeutRatio = d / c;
+
+        const calculateMetalAmortization = ({ metalMine }) => {
+            const { metalCost, crysCost } = costMetalMine(metalMine);
+
+            const normalizedCost =
+                metalCost * metalDeutRatio + crysCost * crysDeutRatio;
+
+            const normalizedNewProd =
+                speed * newMetalProd(metalMine) * metalDeutRatio;
+
+            return amortization(normalizedCost, normalizedNewProd);
+        };
+
+        const calculateCrystalAmortization = ({ crystalMine }) => {
+            const { metalCost, crysCost } = costCrysMine(crystalMine);
+
+            const normalizedCost =
+                metalCost * metalDeutRatio + crysCost * crysDeutRatio;
+
+            const normalizedNewProd =
+                speed * newCrysProd(crystalMine) * crysDeutRatio;
+
+            return amortization(normalizedCost, normalizedNewProd);
+        };
+
+        const calculateDeutAmortization = ({ deutMine, maxT, minT }) => {
+            const { metalCost, crysCost } = costDeutMine(deutMine);
+
+            const normalizedCost =
+                metalCost * metalDeutRatio + crysCost * crysDeutRatio;
+
+            const normalizedNewProd =
+                speed * newDeutProd(deutMine, (minT + maxT) / 2);
+
+            return amortization(normalizedCost, normalizedNewProd);
+        };
+
+        const planetArray = Array.isArray(planets) ? planets : Array(planets);
+
+        const amortizations = planetArray.map(planet => {
+            return {
+                [planet.name]: {
+                    m: calculateMetalAmortization(planet),
+                    c: calculateCrystalAmortization(planet),
+                    d: calculateDeutAmortization(planet),
+                },
+            };
+        });
+
+        return amortizations.length > 1 ? amortizations : amortizations[0];
+    };
+
+    getLowestAmortization = amortizations => {
+        const nextBuilding = amortizations.reduce((acc, planetAmor) => {
+            const planetName = Object.keys(planetAmor)[0];
+
+            const { m, c, d } = getAmortizations(planetAmor);
+
+            const lowestAmortization = Math.min(m, c, d);
+
+            const type = Object.entries(planetAmor[planetName]).reduce(
+                (acc, element) => {
+                    if (element.pop() === lowestAmortization) return element[0];
+
+                    return acc;
+                },
+                ''
+            );
+
+            if (isNaN(acc.value) || acc.value > lowestAmortization)
+                return (acc = {
+                    planet: planetName,
+                    type: BUILDING_TYPES[type],
+                    value: lowestAmortization,
+                });
+
+            return acc;
+        }, {});
+
+        const plasmaAmortization = this.calculatePlasmaAmor();
+
+        if (plasmaAmortization < nextBuilding.value)
+            return {
+                planet: 'Overall',
+                type: 'Plasma',
+                value: plasmaAmortization,
+            };
+
+        return nextBuilding;
+    };
+
+    componentDidMount() {
+        const amortizations = this.calculateAmortizations(this.state.planets);
+        const lowestAmortization = this.getLowestAmortization(amortizations);
+        this.setState({ nextBuilding: lowestAmortization });
     }
 
     calculateNextBuildings = times => {};
@@ -91,7 +198,7 @@ export default class Amortization extends Component {
 
             const getCrystalProd = () => {
                 const prod = crysMineProd(crystalMine);
-                console.log(prod);
+
                 return isNaN(accountCrystalProd)
                     ? prod
                     : accountCrystalProd + prod;
@@ -152,37 +259,26 @@ export default class Amortization extends Component {
             crystalProductionIncrease * crysDeutRatio +
             deutProductionIncrease;
 
-        if (plasmaLevel === 1 || '1')
-            console.log(normalizedProductionIncrease, normalizedCost);
-
         const plasmaAmortization = amortization(
             normalizedCost,
             normalizedProductionIncrease
         );
 
         this.setState({ plasmaAmortization });
-    };
-
-    setEmpireNextBuilding = () => {
-        const { amortizations, plasmaAmortization } = this.state;
-
-        const values = amortizations.reduce(
-            (acc, a) => (acc = [a.value, ...acc]),
-            []
-        );
-
-        const lowestBuilding = Math.min(...values);
-
-        if (plasmaAmortization < lowestBuilding)
-            return this.setState({ nextBuilding: 'plasma' });
-
-        const planets = amortizations.filter(e => e.value === lowestBuilding);
-        this.setState({ nextBuilding: planets });
+        return plasmaAmortization;
     };
 
     onPlasmaLevelChange = level => {
         const plasmaLevel = level === '' ? '' : parseInt(level);
-        this.setState({ plasmaLevel }, () => this.calculatePlasmaAmor());
+        this.setState({ plasmaLevel }, () => {
+            const amortizations = this.calculateAmortizations(
+                this.state.planets
+            );
+            const lowestAmortization = this.getLowestAmortization(
+                amortizations
+            );
+            this.setState({ nextBuilding: lowestAmortization });
+        });
     };
 
     onPlanetChange = planetNumb => (key, value) => {
@@ -193,60 +289,36 @@ export default class Amortization extends Component {
                     { [key]: value }
                 ));
             },
-            () => this.calculatePlasmaAmor()
-        );
-    };
-
-    setPlanetNextBuilding = planet => {
-        this.setState(
-            state => {
-                const { name } = planet;
-                if (!state.amortizations === 0)
-                    return (state.amortizations = [planet]);
-
-                const isAlreadyInState = state.amortizations.find(
-                    e => e.name === name
+            () => {
+                const amortizations = this.calculateAmortizations(
+                    this.state.planets
                 );
-
-                if (!isAlreadyInState)
-                    return (state.amortizations = [
-                        ...state.amortizations,
-                        planet,
-                    ]);
-
-                return (state.amortizations = state.amortizations.map(e => {
-                    if (e.name === name) return planet;
-
-                    return e;
-                }));
-            },
-            () => this.setEmpireNextBuilding()
+                const lowestAmortization = this.getLowestAmortization(
+                    amortizations
+                );
+                this.setState({ nextBuilding: lowestAmortization });
+            }
         );
-    };
-
-    hasNextBuilding = name => {
-        const { nextBuilding } = this.state;
-        if (nextBuilding === 'plasma') return false;
-        return !!nextBuilding.find(e => e.name === name);
-    };
-
-    getNextBuilding = name => {
-        const { nextBuilding } = this.state;
-        if (nextBuilding === 'plasma') return;
-        return nextBuilding.filter(e => e.name === name).pop().nextBuilding;
     };
 
     buildPlanets = (planet, i) => {
-        const hasNextBuilding = this.hasNextBuilding(planet.name);
+        const { nextBuilding } = this.state;
+        const hasNextBuilding = nextBuilding.planet === planet.name;
+
+        const { m, c, d } = getAmortizations(
+            this.calculateAmortizations(planet)
+        );
+
         return (
             <Planet
                 key={`${planet}-${i}`}
                 {...planet}
+                metalAmortization={m}
+                crystalAmortization={c}
+                deutAmortization={d}
                 hasNextBuilding={hasNextBuilding}
                 setPlanetNextBuilding={this.setPlanetNextBuilding}
-                nextEmpireBuilding={
-                    hasNextBuilding ? this.getNextBuilding(planet.name) : null
-                }
+                nextEmpireBuilding={nextBuilding.type}
                 speed={this.state.speed}
                 rates={this.state.rates}
                 onPlanetChange={this.onPlanetChange(i)}
@@ -275,7 +347,7 @@ export default class Amortization extends Component {
                         level={plasmaLevel}
                         onChange={this.onPlasmaLevelChange}
                         amortization={plasmaAmortization}
-                        isNext={nextBuilding === 'plasma'}
+                        isNext={nextBuilding.type === 'Plasma'}
                     />
                 </PlanetContainer>
                 <NextLevel next={nextBuilding} />

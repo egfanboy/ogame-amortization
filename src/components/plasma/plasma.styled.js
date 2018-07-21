@@ -6,7 +6,9 @@ export const Main = styled.div`
     width: 100%;
     align-items: center;
 `;
-export const Amortization = styled.p``;
+export const Amortization = styled.p`
+    color: inherit;
+`;
 
 export const Info = styled.div``;
 

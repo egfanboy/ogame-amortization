@@ -57,6 +57,8 @@ export default class Plasma extends Component {
     render() {
         const { level, amortization, isNext } = this.props;
 
+        console.log(isNext);
+
         return (
             <Main>
                 <Info>
