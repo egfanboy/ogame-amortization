@@ -1,5 +1,7 @@
 import React, { Fragment } from 'react';
 
+import { Card } from 'antd';
+
 import {
     newMetalProd,
     amortization,
@@ -124,6 +126,35 @@ export default class Planet extends React.Component {
             hasNextBuilding,
             nextEmpireBuilding,
         } = this.props;
+
+        return (
+            <Card
+                style={{ margin: '5px', minWidth: '400px' }}
+                title={
+                    <PlanetInfo
+                        name={name}
+                        minT={minT}
+                        maxT={maxT}
+                        onChange={this.onChangeHandler}
+                    />
+                }
+            >
+                <Building
+                    hasNextBuilding={hasNextBuilding}
+                    nextBuilding={hasNextBuilding ? nextEmpireBuilding : null}
+                    onChange={this.onChangeHandler}
+                    rows={this.BuildBuildingRows()}
+                    headings={[
+                        'Building',
+                        'Level',
+                        'Production Increase',
+                        'Cost Metal',
+                        'Cost Crystal',
+                        'Amortization',
+                    ]}
+                />
+            </Card>
+        );
 
         return (
             <Main>

@@ -2,7 +2,7 @@ import React, { Component, Fragment } from 'react';
 
 import styled from 'styled-components';
 
-import { Input } from '../input';
+import { Input } from 'antd';
 
 import {
     Table,
@@ -58,7 +58,7 @@ export default class Building extends Component {
                     <Input
                         value={data.level}
                         onChange={this.onChangeHandler(buildingName)}
-                        width="20"
+                        size="small"
                     />
                 </RowData>
             );

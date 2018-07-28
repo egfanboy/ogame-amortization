@@ -1,20 +1,28 @@
 import React, { Component } from 'react';
 
+import { Card, Icon as AntIcon } from 'antd';
+
 import { plasmaCost } from '../../utils/formulas';
 import { formatProduction, formatCost } from '../../utils/format';
 
 import {
     Main,
     Amortization,
-    Info,
+    Icon,
     AmortizationContainer,
+    PlasmaTitle,
 } from './plasma.styled';
 import { Input } from '../input';
 import { Building } from '../building';
+import ReadOnly from './read-only';
+import Editable from './editable';
 
 export default class Plasma extends Component {
+    state = { editing: false };
+
     onChangeHandler = ({ target: { value } }) => {
         const { onChange } = this.props;
+        console.log(value, typeof value);
 
         onChange(value);
     };
@@ -54,31 +62,42 @@ export default class Plasma extends Component {
         ];
     };
 
+    toggleEditing = () => this.setState({ editing: !this.state.editing });
+
     render() {
         const { level, amortization, isNext } = this.props;
 
-        console.log(isNext);
-
         return (
-            <Main>
-                <Info>
-                    <h1>Plasma</h1>
-                    <Input
-                        value={level}
-                        label="Level"
-                        onChange={this.onChangeHandler}
-                    />
-                </Info>
-
+            <Card
+                style={{ margin: '5px', minWidth: '400px' }}
+                title={
+                    <Main>
+                        <AntIcon style={{ color: 'green' }} type="api" />
+                        <PlasmaTitle>Plasma</PlasmaTitle>
+                        {this.state.editing ? (
+                            <Editable
+                                plasmaLevel={level}
+                                toggleEditing={this.toggleEditing}
+                                onChange={this.onChangeHandler}
+                            />
+                        ) : (
+                            <ReadOnly
+                                plasmaLevel={level}
+                                amortization={amortization}
+                            />
+                        )}
+                        <Icon
+                            type={this.state.editing ? 'close' : 'edit'}
+                            onClick={this.toggleEditing}
+                        />
+                    </Main>
+                }
+            >
                 <Building
-                    headings={['Ressource', 'Cost', 'Production Increase']}
+                    headings={['Resource', 'Cost', 'Production Increase']}
                     rows={this.buildRows()}
                 />
-                <AmortizationContainer isNext={isNext}>
-                    <h4>Amortization</h4>
-                    <Amortization>{amortization}</Amortization>
-                </AmortizationContainer>
-            </Main>
+            </Card>
         );
     }
 }
