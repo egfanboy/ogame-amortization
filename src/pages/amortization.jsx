@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 
-import { Row, Col, Anchor, Button, Icon, Badge } from 'antd';
+import { Row, Col, Anchor, Button, Icon, Modal } from 'antd';
 
 import {
     metalMineProd,
@@ -19,14 +19,16 @@ import {
     amortization,
 } from '../utils/formulas';
 
+import DownloadCsv from '../utils/download-csv';
+
 import getBuildingQueue from '../utils/get-building-queue';
 import styled from 'styled-components';
 import { Planet } from '../components/planet';
-import { NextLevel } from '../components/next-levels';
+import { Queue, QueueTitle } from '../components/queue';
 import { Plasma } from '../components/plasma';
 import getAmortizations from '../utils/get-amortizations';
 
-import { AddPlanetDialog } from '../components/dialogs';
+import { AddPlanetDialog, SettingsDialog } from '../components/dialogs';
 
 const BUILDING_TYPES = {
     m: 'Metal',
@@ -66,16 +68,21 @@ export default class Amortization extends Component {
         planets: planets,
         speed: 7,
         rates: { m: 2, c: 1, d: 1 },
+        geo: 0,
         nextBuilding: { planet: '', type: '' },
         plasmaLevel: 10,
         metalProductionIncrease: 0,
         crystalProductionIncrease: 0,
         deutProductionIncrease: 0,
         showAddPlanetDialog: false,
+        showSettingsDialog: false,
     };
 
     toggleAddPlanetDialog = () =>
         this.setState({ showAddPlanetDialog: !this.state.showAddPlanetDialog });
+
+    toggleSettingsDialog = () =>
+        this.setState({ showSettingsDialog: !this.state.showSettingsDialog });
 
     calculateAmortizations = planets => {
         const {
@@ -304,6 +311,20 @@ export default class Amortization extends Component {
         );
     };
 
+    addPlanet = planet => {
+        this.setState({ planets: [...this.state.planets, planet] }, () =>
+            this.onUpdate()
+        );
+    };
+
+    removePlanet = index => () => {
+        const { planets } = this.state;
+
+        planets.splice(index, 1);
+
+        this.setState({ planets });
+    };
+
     buildPlanets = (planet, i) => {
         const { nextBuilding } = this.state;
         const hasNextBuilding = nextBuilding.planet === planet.name;
@@ -325,6 +346,7 @@ export default class Amortization extends Component {
                 speed={this.state.speed}
                 rates={this.state.rates}
                 onPlanetChange={this.onPlanetChange(i)}
+                removePlanet={this.removePlanet(i)}
             />
         );
     };
@@ -348,6 +370,8 @@ export default class Amortization extends Component {
         ] + 1} on ${planet[0].name}`;
     };
 
+    updateSettings = settings => this.setState(settings);
+
     render() {
         const {
             metalProductionIncrease,
@@ -357,24 +381,52 @@ export default class Amortization extends Component {
             plasmaAmortization,
             nextBuilding,
             queue,
+            rates,
+            speed,
+            geo,
         } = this.state;
 
         return (
             <React.Fragment>
                 <AddPlanetDialog
+                    addPlanet={this.addPlanet}
                     visible={this.state.showAddPlanetDialog}
                     toggleDialog={this.toggleAddPlanetDialog}
                 />
+                <SettingsDialog
+                    updateSettings={this.updateSettings}
+                    rates={rates}
+                    speed={speed}
+                    geo={geo}
+                    visible={this.state.showSettingsDialog}
+                    toggleDialog={this.toggleSettingsDialog}
+                />
                 <StyledAnchor>
                     <Button.Group style={{ overflow: 'hidden' }}>
-                        <Button icon="setting">Settings</Button>
+                        <Button
+                            icon="setting"
+                            onClick={this.toggleSettingsDialog}
+                        >
+                            Settings
+                        </Button>
                         <Button
                             icon="global"
                             onClick={this.toggleAddPlanetDialog}
                         >
                             Add planet
                         </Button>
-                        <Button icon="table">
+                        <Button
+                            icon="table"
+                            onClick={() =>
+                                Modal.confirm({
+                                    title: <QueueTitle />,
+                                    iconType: 'file-excel',
+                                    okText: 'Download',
+                                    onOk: () => DownloadCsv(queue),
+                                    content: <Queue queue={queue} />,
+                                })
+                            }
+                        >
                             Generate Next Buildings List
                         </Button>
                     </Button.Group>
@@ -407,8 +459,6 @@ export default class Amortization extends Component {
                             />
                         </Col>
                     </Row>
-
-                    {/* <NextLevel next={nextBuilding} queue={queue} /> */}
                 </Main>
             </React.Fragment>
         );
@@ -435,7 +485,7 @@ const NextBuilding = styled.div`
     align-items: center;
     border: 1px solid #e8e8e8;
     width: 100%;
-    max-width: 645px;
+    max-width: 615px;
     padding: 10px;
 `;
 

@@ -21,7 +21,7 @@ export default class PlanetInfo extends Component {
     toggleEditing = () => this.setState({ editing: !this.state.editing });
 
     render() {
-        const { name, maxT, minT } = this.props;
+        const { name, maxT, minT, removePlanet } = this.props;
 
         return (
             <Main>
@@ -41,30 +41,7 @@ export default class PlanetInfo extends Component {
                     type={this.state.editing ? 'close' : 'edit'}
                     onClick={this.toggleEditing}
                 />
-            </Main>
-        );
-
-        return (
-            <Main>
-                <PlanetName>{name}</PlanetName>
-                <TempContainer>
-                    <Input
-                        width="30"
-                        label="Max Temp"
-                        value={maxT}
-                        onChange={({ target: { value } }) =>
-                            this.validateInput('maxT', value)
-                        }
-                    />
-                    <Input
-                        width="30"
-                        label="Min Temp"
-                        value={minT}
-                        onChange={({ target: { value } }) =>
-                            this.validateInput('minT', value)
-                        }
-                    />
-                </TempContainer>
+                <Icon type="delete" hovercolor="red" onClick={removePlanet} />
             </Main>
         );
     }

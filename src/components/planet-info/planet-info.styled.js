@@ -5,7 +5,7 @@ export const Icon = styled(AntIcon)`
     transition: all 0.3s;
     &:hover {
         cursor: pointer;
-        color: blue;
+        color: ${({ hovercolor }) => hovercolor || 'blue'};
     }
 `;
 

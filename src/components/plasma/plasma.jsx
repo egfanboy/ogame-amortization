@@ -22,7 +22,6 @@ export default class Plasma extends Component {
 
     onChangeHandler = ({ target: { value } }) => {
         const { onChange } = this.props;
-        console.log(value, typeof value);
 
         onChange(value);
     };
@@ -71,7 +70,7 @@ export default class Plasma extends Component {
             <Card
                 style={{ margin: '5px', minWidth: '400px' }}
                 title={
-                    <Main>
+                    <Main isNext={isNext}>
                         <AntIcon style={{ color: 'green' }} type="api" />
                         <PlasmaTitle>Plasma</PlasmaTitle>
                         {this.state.editing ? (

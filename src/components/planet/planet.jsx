@@ -125,6 +125,7 @@ export default class Planet extends React.Component {
             maxT,
             hasNextBuilding,
             nextEmpireBuilding,
+            removePlanet,
         } = this.props;
 
         return (
@@ -136,6 +137,7 @@ export default class Planet extends React.Component {
                         minT={minT}
                         maxT={maxT}
                         onChange={this.onChangeHandler}
+                        removePlanet={removePlanet}
                     />
                 }
             >
@@ -154,35 +156,6 @@ export default class Planet extends React.Component {
                     ]}
                 />
             </Card>
-        );
-
-        return (
-            <Main>
-                <PlanetInfo
-                    name={name}
-                    minT={minT}
-                    maxT={maxT}
-                    onChange={this.onChangeHandler}
-                />
-                <BuildingContainer>
-                    <Building
-                        hasNextBuilding={hasNextBuilding}
-                        nextBuilding={
-                            hasNextBuilding ? nextEmpireBuilding : null
-                        }
-                        onChange={this.onChangeHandler}
-                        rows={this.BuildBuildingRows()}
-                        headings={[
-                            'Building',
-                            'Level',
-                            'Production Increase',
-                            'Cost Metal',
-                            'Cost Crystal',
-                            'Amortization',
-                        ]}
-                    />
-                </BuildingContainer>
-            </Main>
         );
     }
 }
