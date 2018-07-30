@@ -11,10 +11,10 @@ const removeFile = promisify(fs.unlink);
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
+const buildPath = path.join(__dirname, '..', '/build');
+app.use(express.static(buildPath));
 
-app.get('*', (req, res) =>
-    res.sendFile(path.join(__dirname, '..', 'build', 'index.html'))
-);
+app.get('*', (req, res) => res.sendFile(path.join(buildPath, 'index.html')));
 
 app.post('/download', async (req, res) => {
     const tempFilePath = path.join(__dirname, '..', `temp-${Date.now()}.csv`);
