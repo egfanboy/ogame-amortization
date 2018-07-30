@@ -18,23 +18,25 @@ export const Table = styled.table`
     & th:last-child {
         border-top-right-radius: 4px;
     }
-    width: 75%;
+    width: 100%;
 `;
-export const TableBody = styled.tbody``;
+export const TableBody = styled.tbody`
+    text-align: center;
+`;
 export const TableHeading = styled.th`
   height: 30px;
-  width:30px;
+  width:80px;
   font-size:10px;
   user-select:none;
   text-align: center;
-  color: black;
- background-color:blue;
+  color: rgba(0,0,0,.85);
+ background-color:#fafafa;
 
 
   }
 `;
 export const RowData = styled.td`
-    text-align: left;
+    text-align: center;
 
     user-select: none;
     height: 30px;
@@ -43,6 +45,7 @@ export const RowData = styled.td`
 
 export const HeaderRow = styled.tr``;
 export const TableRow = styled.tr`
+    transition: all 0.3s;
     ${RowData} {
         color: ${({ isNext }) => (isNext ? 'red' : 'black')};
     }
@@ -51,6 +54,6 @@ export const TableRow = styled.tr`
         ${RowData} {
             color: ${({ isNext }) => (isNext ? 'red' : 'black')};
         }
-        background-color: pink;
+        background-color: #e6f7ff;
     }
 `;

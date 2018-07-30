@@ -1,5 +1,7 @@
 import React, { Component } from 'react';
 
+import { Row, Col, Anchor, Button, Icon, Modal } from 'antd';
+
 import {
     metalMineProd,
     crysMineProd,
@@ -17,12 +19,16 @@ import {
     amortization,
 } from '../utils/formulas';
 
+import DownloadCsv from '../utils/download-csv';
+
 import getBuildingQueue from '../utils/get-building-queue';
 import styled from 'styled-components';
 import { Planet } from '../components/planet';
-import { NextLevel } from '../components/next-levels';
+import { Queue, QueueTitle } from '../components/queue';
 import { Plasma } from '../components/plasma';
 import getAmortizations from '../utils/get-amortizations';
+
+import { AddPlanetDialog, SettingsDialog } from '../components/dialogs';
 
 const BUILDING_TYPES = {
     m: 'Metal',
@@ -48,7 +54,7 @@ const planets = [
         deutMine: 20,
     },
     {
-        name: 'cool',
+        name: 'Cool',
         maxT: 50,
         minT: 10,
         metalMine: 20,
@@ -62,12 +68,21 @@ export default class Amortization extends Component {
         planets: planets,
         speed: 7,
         rates: { m: 2, c: 1, d: 1 },
-        nextBuilding: {},
-        plasmaLevel: 0,
+        geo: 0,
+        nextBuilding: { planet: '', type: '' },
+        plasmaLevel: 10,
         metalProductionIncrease: 0,
         crystalProductionIncrease: 0,
         deutProductionIncrease: 0,
+        showAddPlanetDialog: false,
+        showSettingsDialog: false,
     };
+
+    toggleAddPlanetDialog = () =>
+        this.setState({ showAddPlanetDialog: !this.state.showAddPlanetDialog });
+
+    toggleSettingsDialog = () =>
+        this.setState({ showSettingsDialog: !this.state.showSettingsDialog });
 
     calculateAmortizations = planets => {
         const {
@@ -177,14 +192,13 @@ export default class Amortization extends Component {
         );
         const amortizations = this.calculateAmortizations(this.state.planets);
         const lowestAmortization = this.getLowestAmortization(amortizations);
+
         this.setState({ nextBuilding: lowestAmortization, queue });
     };
 
     componentDidMount() {
         this.onUpdate();
     }
-
-    calculateNextBuildings = times => {};
 
     calculatePlasmaAmor = (plasmaLevel = this.state.plasmaLevel) => {
         const {
@@ -297,6 +311,20 @@ export default class Amortization extends Component {
         );
     };
 
+    addPlanet = planet => {
+        this.setState({ planets: [...this.state.planets, planet] }, () =>
+            this.onUpdate()
+        );
+    };
+
+    removePlanet = index => () => {
+        const { planets } = this.state;
+
+        planets.splice(index, 1);
+
+        this.setState({ planets });
+    };
+
     buildPlanets = (planet, i) => {
         const { nextBuilding } = this.state;
         const hasNextBuilding = nextBuilding.planet === planet.name;
@@ -318,9 +346,31 @@ export default class Amortization extends Component {
                 speed={this.state.speed}
                 rates={this.state.rates}
                 onPlanetChange={this.onPlanetChange(i)}
+                removePlanet={this.removePlanet(i)}
             />
         );
     };
+
+    getNextBuildingMessage = () => {
+        const { nextBuilding, planets, plasmaLevel } = this.state;
+
+        const planet = planets.filter(
+            ({ name }) =>
+                name.toLowerCase() === nextBuilding.planet.toLowerCase()
+        );
+
+        if (!planet.length)
+            return `The next upgrade should be ${
+                nextBuilding.type
+            } level ${plasmaLevel + 1}`;
+        const building = nextBuilding.type;
+
+        return `The next upgrade should be ${building} mine level ${planet[0][
+            `${building.toLowerCase()}Mine`
+        ] + 1} on ${planet[0].name}`;
+    };
+
+    updateSettings = settings => this.setState(settings);
 
     render() {
         const {
@@ -331,37 +381,118 @@ export default class Amortization extends Component {
             plasmaAmortization,
             nextBuilding,
             queue,
+            rates,
+            speed,
+            geo,
         } = this.state;
 
         return (
-            <Main>
-                <PlanetContainer>
-                    {this.state.planets.map(this.buildPlanets)}
-                    <Plasma
-                        metalProductionIncrease={metalProductionIncrease}
-                        crystalProductionIncrease={crystalProductionIncrease}
-                        deutProductionIncrease={deutProductionIncrease}
-                        level={plasmaLevel}
-                        onChange={this.onPlasmaLevelChange}
-                        amortization={plasmaAmortization}
-                        isNext={nextBuilding.type === 'Plasma'}
-                    />
-                </PlanetContainer>
-                <NextLevel next={nextBuilding} queue={queue} />
-            </Main>
+            <React.Fragment>
+                <AddPlanetDialog
+                    addPlanet={this.addPlanet}
+                    visible={this.state.showAddPlanetDialog}
+                    toggleDialog={this.toggleAddPlanetDialog}
+                />
+                <SettingsDialog
+                    updateSettings={this.updateSettings}
+                    rates={rates}
+                    speed={speed}
+                    geo={geo}
+                    visible={this.state.showSettingsDialog}
+                    toggleDialog={this.toggleSettingsDialog}
+                />
+                <StyledAnchor>
+                    <Button.Group style={{ overflow: 'hidden' }}>
+                        <Button
+                            icon="setting"
+                            onClick={this.toggleSettingsDialog}
+                        >
+                            Settings
+                        </Button>
+                        <Button
+                            icon="global"
+                            onClick={this.toggleAddPlanetDialog}
+                        >
+                            Add planet
+                        </Button>
+                        <Button
+                            icon="table"
+                            onClick={() =>
+                                Modal.confirm({
+                                    title: <QueueTitle />,
+                                    iconType: 'file-excel',
+                                    okText: 'Download',
+                                    onOk: () => DownloadCsv(queue),
+                                    content: <Queue queue={queue} />,
+                                })
+                            }
+                        >
+                            Generate Next Buildings List
+                        </Button>
+                    </Button.Group>
+                </StyledAnchor>
+
+                <Main>
+                    <NextBuilding>
+                        <Icon
+                            style={{ fontSize: '20px', color: 'blue' }}
+                            type="info-circle"
+                        />
+                        <Message>{this.getNextBuildingMessage()}</Message>
+                    </NextBuilding>
+
+                    <Row gutter={16} type="flex" justify="space-between">
+                        <Col>
+                            {this.state.planets.map(this.buildPlanets)}
+                            <Plasma
+                                metalProductionIncrease={
+                                    metalProductionIncrease
+                                }
+                                crystalProductionIncrease={
+                                    crystalProductionIncrease
+                                }
+                                deutProductionIncrease={deutProductionIncrease}
+                                level={plasmaLevel}
+                                onChange={this.onPlasmaLevelChange}
+                                amortization={plasmaAmortization}
+                                isNext={nextBuilding.type === 'Plasma'}
+                            />
+                        </Col>
+                    </Row>
+                </Main>
+            </React.Fragment>
         );
     }
 }
 
-const PlanetContainer = styled.div`
+const StyledAnchor = styled(Anchor)`
+    position: absolute;
+    right: 10px;
+    z-index: 1;
+
+    .ant-anchor-ink:before {
+        background: none;
+    }
+`;
+const Message = styled.p`
+    margin: 0px 0px 0px 10px;
+    font-weight: 500;
+    color: rgba(0, 0, 0, 0.75);
+`;
+const NextBuilding = styled.div`
     display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: flex-start;
-    width: 450px;
+    justify-content: center;
+    align-items: center;
+    border: 1px solid #e8e8e8;
+    width: 100%;
+    max-width: 615px;
+    padding: 10px;
 `;
 
 const Main = styled.div`
     display: flex;
     justify-content: space-around;
+    align-items: center;
+    padding-top: 4.5rem;
+    flex-direction: column;
 `;

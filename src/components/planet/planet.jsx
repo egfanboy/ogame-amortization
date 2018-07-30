@@ -1,5 +1,7 @@
 import React, { Fragment } from 'react';
 
+import { Card } from 'antd';
+
 import {
     newMetalProd,
     amortization,
@@ -123,35 +125,37 @@ export default class Planet extends React.Component {
             maxT,
             hasNextBuilding,
             nextEmpireBuilding,
+            removePlanet,
         } = this.props;
 
         return (
-            <Main>
-                <PlanetInfo
-                    name={name}
-                    minT={minT}
-                    maxT={maxT}
-                    onChange={this.onChangeHandler}
-                />
-                <BuildingContainer>
-                    <Building
-                        hasNextBuilding={hasNextBuilding}
-                        nextBuilding={
-                            hasNextBuilding ? nextEmpireBuilding : null
-                        }
+            <Card
+                style={{ margin: '5px', minWidth: '400px' }}
+                title={
+                    <PlanetInfo
+                        name={name}
+                        minT={minT}
+                        maxT={maxT}
                         onChange={this.onChangeHandler}
-                        rows={this.BuildBuildingRows()}
-                        headings={[
-                            'Building',
-                            'Level',
-                            'Production Increase',
-                            'Cost Metal',
-                            'Cost Crystal',
-                            'Amortization',
-                        ]}
+                        removePlanet={removePlanet}
                     />
-                </BuildingContainer>
-            </Main>
+                }
+            >
+                <Building
+                    hasNextBuilding={hasNextBuilding}
+                    nextBuilding={hasNextBuilding ? nextEmpireBuilding : null}
+                    onChange={this.onChangeHandler}
+                    rows={this.BuildBuildingRows()}
+                    headings={[
+                        'Building',
+                        'Level',
+                        'Production Increase',
+                        'Cost Metal',
+                        'Cost Crystal',
+                        'Amortization',
+                    ]}
+                />
+            </Card>
         );
     }
 }
