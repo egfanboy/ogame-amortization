@@ -8,7 +8,7 @@ export default queue => {
     }));
 
     axios
-        .post('http://localhost:3001/download', JSON.stringify(csvData), {
+        .post('/download', JSON.stringify(csvData), {
             headers: { 'Content-type': 'application/json' },
             responseType: 'blob',
         })
