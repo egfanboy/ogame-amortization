@@ -120,10 +120,11 @@ export default class Amortization extends Component {
         return amortizations.length > 1 ? amortizations : amortizations[0];
     };
 
-    getLowestAmortization = (amortizations, plasmaLevel) => {
+    getLowestAmortization = (amortizations = [], plasmaLevel) => {
         const amortizationsArray = Array.isArray(amortizations)
             ? amortizations
             : Array(amortizations);
+
         const nextBuilding = amortizationsArray.reduce((acc, planetAmor) => {
             const planetName = Object.keys(planetAmor)[0];
 
@@ -344,6 +345,12 @@ export default class Amortization extends Component {
     getNextBuildingMessage = () => {
         const { nextBuilding, planets, plasmaLevel } = this.state;
 
+        if (!planets.length)
+            return `Seems like you don't have any planets.
+            You can create one using the 'Add Planet' button above.`;
+
+        if (!nextBuilding.planet) return 'Calculating...';
+
         const planet = planets.filter(
             ({ name }) =>
                 name.toLowerCase() === nextBuilding.planet.toLowerCase()
@@ -370,6 +377,7 @@ export default class Amortization extends Component {
             plasmaLevel,
             plasmaAmortization,
             nextBuilding,
+            planets,
             queue,
             rates,
             speed,
@@ -436,25 +444,28 @@ export default class Amortization extends Component {
                         </Tooltip>
                         <Message>{this.getNextBuildingMessage()}</Message>
                     </NextBuilding>
-
-                    <Row gutter={16} type="flex" justify="space-between">
-                        <Col>
-                            {this.state.planets.map(this.buildPlanets)}
-                            <Plasma
-                                metalProductionIncrease={
-                                    metalProductionIncrease
-                                }
-                                crystalProductionIncrease={
-                                    crystalProductionIncrease
-                                }
-                                deutProductionIncrease={deutProductionIncrease}
-                                level={plasmaLevel}
-                                onChange={this.onPlasmaLevelChange}
-                                amortization={plasmaAmortization}
-                                isNext={nextBuilding.type === 'Plasma'}
-                            />
-                        </Col>
-                    </Row>
+                    {planets.length !== 0 && (
+                        <Row gutter={16} type="flex" justify="space-between">
+                            <Col>
+                                {this.state.planets.map(this.buildPlanets)}
+                                <Plasma
+                                    metalProductionIncrease={
+                                        metalProductionIncrease
+                                    }
+                                    crystalProductionIncrease={
+                                        crystalProductionIncrease
+                                    }
+                                    deutProductionIncrease={
+                                        deutProductionIncrease
+                                    }
+                                    level={plasmaLevel}
+                                    onChange={this.onPlasmaLevelChange}
+                                    amortization={plasmaAmortization}
+                                    isNext={nextBuilding.type === 'Plasma'}
+                                />
+                            </Col>
+                        </Row>
+                    )}
                 </Main>
             </React.Fragment>
         );

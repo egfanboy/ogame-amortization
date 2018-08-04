@@ -8,7 +8,7 @@ export const formatCost = cost => {
     if (cost / THOUSAND_UNITS >= 1)
         return `${(cost / THOUSAND_UNITS).toPrecision(4)}k`;
 
-    return cost.toFixed(2);
+    return Math.ceil(cost);
 };
 
 export const formatProduction = production => {

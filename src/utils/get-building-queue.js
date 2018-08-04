@@ -10,6 +10,8 @@ export default function(
     let plasmaLevel = plasmaLvl;
     let nextLevel;
 
+    if (!planets.length) return [];
+
     for (let i = 0; i < projectionAmount; i++) {
         const amortizations = getAmortization(planets);
         const nextBuilding = getLowestAmortization(amortizations, plasmaLevel);
