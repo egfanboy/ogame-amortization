@@ -121,7 +121,10 @@ export default class Amortization extends Component {
     };
 
     getLowestAmortization = (amortizations, plasmaLevel) => {
-        const nextBuilding = amortizations.reduce((acc, planetAmor) => {
+        const amortizationsArray = Array.isArray(amortizations)
+            ? amortizations
+            : Array(amortizations);
+        const nextBuilding = amortizationsArray.reduce((acc, planetAmor) => {
             const planetName = Object.keys(planetAmor)[0];
 
             const { m, c, d } = getAmortizations(planetAmor);
@@ -160,7 +163,6 @@ export default class Amortization extends Component {
     };
 
     onUpdate = () => {
-        console.log('updae');
         const { planets, rates, geo, speed } = this.state;
         const queue = getBuildingQueue(
             this.state.planets,
@@ -177,9 +179,9 @@ export default class Amortization extends Component {
 
     componentDidMount() {
         const planets = JSON.parse(localStorage.getItem('planets')) || [];
-        const x = JSON.parse(localStorage.getItem('settings')) || {};
-        console.log(x);
-        this.setState({ planets }, () => this.onUpdate());
+        const { rates, geo, speed } =
+            JSON.parse(localStorage.getItem('settings')) || {};
+        this.setState({ planets, rates, geo, speed }, () => this.onUpdate());
     }
 
     calculatePlasmaAmor = (plasmaLevel = this.state.plasmaLevel) => {
