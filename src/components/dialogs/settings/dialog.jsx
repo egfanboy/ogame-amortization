@@ -16,7 +16,7 @@ class SettingsDialog extends React.Component {
                         d: parseFloat(values.d) || 1,
                     },
                     geo: values.geo,
-                    speed: parseInt(values.speed),
+                    speed: parseInt(values.speed, 10),
                 });
                 form.resetFields();
                 toggleDialog();

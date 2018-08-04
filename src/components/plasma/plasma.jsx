@@ -5,14 +5,8 @@ import { Card, Icon as AntIcon } from 'antd';
 import { plasmaCost } from '../../utils/formulas';
 import { formatProduction, formatCost } from '../../utils/format';
 
-import {
-    Main,
-    Amortization,
-    Icon,
-    AmortizationContainer,
-    PlasmaTitle,
-} from './plasma.styled';
-import { Input } from '../input';
+import { Main, Icon, PlasmaTitle } from './plasma.styled';
+
 import { Building } from '../building';
 import ReadOnly from './read-only';
 import Editable from './editable';
@@ -81,7 +75,7 @@ export default class Plasma extends Component {
                             />
                         ) : (
                             <ReadOnly
-                                plasmaLevel={level}
+                                plasmaLevel={level || 0}
                                 amortization={amortization}
                             />
                         )}

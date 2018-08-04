@@ -11,11 +11,11 @@ class AddPlanetDialog extends React.Component {
             if (!err) {
                 addPlanet({
                     name: values.name,
-                    maxT: parseInt(values.maxT) || 0,
-                    minT: parseInt(values.minT) || 0,
-                    metalMine: parseInt(values.metalMine) || 0,
-                    crystalMine: parseInt(values.crystalMine) || 0,
-                    deutMine: parseInt(values.deutMine) || 0,
+                    maxT: parseInt(values.maxT, 10) || 0,
+                    minT: parseInt(values.minT, 10) || 0,
+                    metalMine: parseInt(values.metalMine, 10) || 0,
+                    crystalMine: parseInt(values.crystalMine, 10) || 0,
+                    deutMine: parseInt(values.deutMine, 10) || 0,
                 });
                 form.resetFields();
                 toggleDialog();

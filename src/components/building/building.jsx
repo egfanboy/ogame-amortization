@@ -1,6 +1,4 @@
-import React, { Component, Fragment } from 'react';
-
-import styled from 'styled-components';
+import React from 'react';
 
 import { Input } from 'antd';
 
@@ -14,7 +12,7 @@ import {
     HeaderRow,
 } from './building.styled';
 
-export default class Building extends Component {
+export default class Building extends React.Component {
     static defaultProps = {
         headings: [],
         rows: [],
@@ -28,7 +26,7 @@ export default class Building extends Component {
 
         const { onChange } = this.props;
 
-        onChange(getKey(building), parseInt(e.target.value) || 0);
+        onChange(getKey(building), parseInt(e.target.value, 10) || 0);
     };
 
     buildHeading = heading => (
