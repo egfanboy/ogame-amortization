@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { NextBuildings, PlanetName, Main, InfoMessage } from './queue.styled';
+import { NextBuildings, PlanetName, Main } from './queue.styled';
 
 export default class NextLevel extends React.Component {
     static defaultProps = { queue: [] };

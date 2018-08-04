@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { saveAs } from 'file-saver';
+
 export default queue => {
     const csvData = queue.map(({ planet, type, level }) => ({
         planet,
@@ -18,6 +19,5 @@ export default queue => {
             saveAs(b, `amortization-${Date.now()}.csv`, {
                 type: 'text/csv',
             });
-        })
-        .catch(console.log);
+        });
 };

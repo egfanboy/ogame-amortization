@@ -1,25 +1,20 @@
-import React, { Fragment } from 'react';
+import React from 'react';
 
 import { Card } from 'antd';
 
 import {
     newMetalProd,
-    amortization,
     newCrysProd,
     newDeutProd,
     costDeutMine,
     costMetalMine,
     costCrysMine,
-    metalMineProd,
-    crysMineProd,
-    deutMineProd,
 } from '../../utils/formulas';
 
 import { formatCost, formatProduction } from '../../utils/format';
 
 import { Building } from '../building';
 import { PlanetInfo } from '../planet-info';
-import { Main, BuildingContainer, InfoContainer } from './planet.styled';
 
 export default class Planet extends React.Component {
     onChangeHandler = (key, value) => {

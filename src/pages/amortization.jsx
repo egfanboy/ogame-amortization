@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 
-import { Row, Col, Anchor, Button, Icon, Modal } from 'antd';
+import { Row, Col, Anchor, Button, Icon, Modal, Tooltip } from 'antd';
 
 import {
     metalMineProd,
@@ -36,37 +36,10 @@ const BUILDING_TYPES = {
     d: 'Deut',
 };
 
-const planets = [
-    {
-        name: 'One',
-        maxT: 50,
-        minT: 10,
-        metalMine: 25,
-        crystalMine: 22,
-        deutMine: 20,
-    },
-    {
-        name: 'And Justice for All',
-        maxT: 70,
-        minT: 10,
-        metalMine: 20,
-        crystalMine: 15,
-        deutMine: 20,
-    },
-    {
-        name: 'Cool',
-        maxT: 50,
-        minT: 10,
-        metalMine: 20,
-        crystalMine: 15,
-        deutMine: 7,
-    },
-];
-
 export default class Amortization extends Component {
     state = {
-        planets: planets,
-        speed: 7,
+        planets: [],
+        speed: 1,
         rates: { m: 2, c: 1, d: 1 },
         geo: 0,
         nextBuilding: { planet: '', type: '' },
@@ -88,7 +61,10 @@ export default class Amortization extends Component {
         const {
             speed,
             rates: { m, c, d },
+            geo,
         } = this.state;
+
+        const geoFactor = 1 + geo;
 
         const metalDeutRatio = d / m;
         const crysDeutRatio = d / c;
@@ -100,7 +76,7 @@ export default class Amortization extends Component {
                 metalCost * metalDeutRatio + crysCost * crysDeutRatio;
 
             const normalizedNewProd =
-                speed * newMetalProd(metalMine) * metalDeutRatio;
+                geoFactor * speed * newMetalProd(metalMine) * metalDeutRatio;
 
             return amortization(normalizedCost, normalizedNewProd);
         };
@@ -112,7 +88,7 @@ export default class Amortization extends Component {
                 metalCost * metalDeutRatio + crysCost * crysDeutRatio;
 
             const normalizedNewProd =
-                speed * newCrysProd(crystalMine) * crysDeutRatio;
+                geoFactor * speed * newCrysProd(crystalMine) * crysDeutRatio;
 
             return amortization(normalizedCost, normalizedNewProd);
         };
@@ -124,7 +100,7 @@ export default class Amortization extends Component {
                 metalCost * metalDeutRatio + crysCost * crysDeutRatio;
 
             const normalizedNewProd =
-                speed * newDeutProd(deutMine, (minT + maxT) / 2);
+                geoFactor * speed * newDeutProd(deutMine, (minT + maxT) / 2);
 
             return amortization(normalizedCost, normalizedNewProd);
         };
@@ -184,20 +160,26 @@ export default class Amortization extends Component {
     };
 
     onUpdate = () => {
+        console.log('updae');
+        const { planets, rates, geo, speed } = this.state;
         const queue = getBuildingQueue(
             this.state.planets,
             this.calculateAmortizations,
             this.getLowestAmortization,
             this.state.plasmaLevel
         );
-        const amortizations = this.calculateAmortizations(this.state.planets);
+        const amortizations = this.calculateAmortizations(planets);
         const lowestAmortization = this.getLowestAmortization(amortizations);
-
+        localStorage.setItem('settings', JSON.stringify({ rates, geo, speed }));
+        localStorage.setItem('planets', JSON.stringify(planets));
         this.setState({ nextBuilding: lowestAmortization, queue });
     };
 
     componentDidMount() {
-        this.onUpdate();
+        const planets = JSON.parse(localStorage.getItem('planets')) || [];
+        const x = JSON.parse(localStorage.getItem('settings')) || {};
+        console.log(x);
+        this.setState({ planets }, () => this.onUpdate());
     }
 
     calculatePlasmaAmor = (plasmaLevel = this.state.plasmaLevel) => {
@@ -205,7 +187,10 @@ export default class Amortization extends Component {
             speed,
             planets,
             rates: { m, c, d },
+            geo,
         } = this.state;
+
+        const geoFactor = 1 + geo;
 
         const accountProduction = planets.reduce((acc, planet) => {
             const {
@@ -245,7 +230,9 @@ export default class Amortization extends Component {
         const normalizedAccountProduction = Object.entries(
             accountProduction
         ).reduce((acc, [key, value]) => {
-            return (acc = Object.assign(acc, { [key]: speed * value }));
+            return (acc = Object.assign(acc, {
+                [key]: geoFactor * speed * value,
+            }));
         }, {});
 
         const {
@@ -295,7 +282,7 @@ export default class Amortization extends Component {
     };
 
     onPlasmaLevelChange = level => {
-        const plasmaLevel = level === '' ? '' : parseInt(level);
+        const plasmaLevel = level === '' ? '' : parseInt(level, 10);
         this.setState({ plasmaLevel }, () => this.onUpdate());
     };
 
@@ -322,7 +309,7 @@ export default class Amortization extends Component {
 
         planets.splice(index, 1);
 
-        this.setState({ planets });
+        this.setState({ planets }, () => this.onUpdate());
     };
 
     buildPlanets = (planet, i) => {
@@ -370,7 +357,7 @@ export default class Amortization extends Component {
         ] + 1} on ${planet[0].name}`;
     };
 
-    updateSettings = settings => this.setState(settings);
+    updateSettings = settings => this.setState(settings, () => this.onUpdate());
 
     render() {
         const {
@@ -431,13 +418,19 @@ export default class Amortization extends Component {
                         </Button>
                     </Button.Group>
                 </StyledAnchor>
-
                 <Main>
                     <NextBuilding>
-                        <Icon
-                            style={{ fontSize: '20px', color: 'blue' }}
-                            type="info-circle"
-                        />
+                        <Tooltip
+                            title={`These values are calculated with uni speed: ${speed}, rates: ${
+                                rates.m
+                            }:${rates.c}:${rates.d} and geologist ${geo}%.\n\n\n
+                            These values can be changed in the settings.`}
+                        >
+                            <Icon
+                                style={{ fontSize: '20px', color: 'blue' }}
+                                type="info-circle"
+                            />
+                        </Tooltip>
                         <Message>{this.getNextBuildingMessage()}</Message>
                     </NextBuilding>
 
