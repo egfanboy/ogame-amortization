@@ -180,7 +180,8 @@ export default class Amortization extends Component {
     componentDidMount() {
         const planets = JSON.parse(localStorage.getItem('planets')) || [];
         const { rates, geo, speed } =
-            JSON.parse(localStorage.getItem('settings')) || {};
+            JSON.parse(localStorage.getItem('settings')) || this.state;
+
         this.setState({ planets, rates, geo, speed }, () => this.onUpdate());
     }
 
