@@ -67,12 +67,7 @@ export default class SettingsForm extends React.Component {
                                         /^([1]\.[0-9]{1})|^([1]*$)|^([2]*$)/g
                                     ),
                                     message: 'Can be 1-2',
-                                },
-                                {
-                                    max: 2,
-                                    message:
-                                        'I am pretty sure univserses cannot be that fast',
-                                },
+                                }
                             ],
                         })(<Input style={{ width: '60px' }} />)}
                     </FormItem>
