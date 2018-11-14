@@ -68,8 +68,8 @@ export default class AddPlanetForm extends React.Component {
                         ],
                     })(<Input />)}
                 </FormItem>
-                <FormItem label="Max Temp">
-                    {getFieldDecorator('maxT', {
+                <FormItem label="Min Temp">
+                    {getFieldDecorator('minT', {
                         rules: [
                             {
                                 pattern: new RegExp(/(^-*[0-9]*$)/g),
@@ -83,8 +83,8 @@ export default class AddPlanetForm extends React.Component {
                         ],
                     })(<Input />)}
                 </FormItem>
-                <FormItem label="Min Temp">
-                    {getFieldDecorator('minT', {
+                <FormItem label="Max Temp">
+                    {getFieldDecorator('maxT', {
                         rules: [
                             {
                                 pattern: new RegExp(/(^-*[0-9]*$)/g),

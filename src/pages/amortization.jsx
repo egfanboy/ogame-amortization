@@ -1,6 +1,16 @@
 import React, { Component } from 'react';
 
-import { Row, Col, Anchor, Button, Icon, Modal, Tooltip } from 'antd';
+import {
+    Row,
+    Col,
+    Anchor,
+    Button,
+    Icon,
+    Modal,
+    Tooltip,
+    Dropdown,
+    Menu,
+} from 'antd';
 
 import {
     metalMineProd,
@@ -36,6 +46,13 @@ const BUILDING_TYPES = {
     d: 'Deut',
 };
 
+const LOCAL_STORAGE_KEYS = {
+    planets: 'ogam-planets',
+    plasma: 'ogam-plasma',
+    settings: 'ogam-settings',
+    presets: 'ogam-presets',
+};
+
 export default class Amortization extends Component {
     state = {
         planets: [],
@@ -43,7 +60,7 @@ export default class Amortization extends Component {
         rates: { m: 2, c: 1, d: 1 },
         geo: 0,
         nextBuilding: { planet: '', type: '' },
-        plasmaLevel: 10,
+        plasmaLevel: 0,
         metalProductionIncrease: 0,
         crystalProductionIncrease: 0,
         deutProductionIncrease: 0,
@@ -52,6 +69,20 @@ export default class Amortization extends Component {
         presets: [],
         presetIndex: null,
     };
+
+    getPresetMenu = () => (
+        <Menu
+            onClick={({ key }) => {
+                this.handlePresetChange(+key.split('_').pop());
+            }}
+        >
+            {this.state.presets.map((_, index) => (
+                <Menu.Item key={`preset_${index}`}>
+                    Preset {index + 1}
+                </Menu.Item>
+            ))}
+        </Menu>
+    );
 
     toggleAddPlanetDialog = () =>
         this.setState({ showAddPlanetDialog: !this.state.showAddPlanetDialog });
@@ -166,7 +197,15 @@ export default class Amortization extends Component {
     };
 
     onUpdate = () => {
-        const { planets, rates, geo, speed, presetIndex, presets } = this.state;
+        const {
+            planets,
+            rates,
+            geo,
+            speed,
+            presetIndex,
+            presets,
+            plasmaLevel,
+        } = this.state;
         const queue = getBuildingQueue(
             this.state.planets,
             this.calculateAmortizations,
@@ -177,23 +216,29 @@ export default class Amortization extends Component {
         const lowestAmortization = this.getLowestAmortization(amortizations);
 
         if (presetIndex !== null) {
-            console.log('here');
             const updatedPresets = presets.map((preset, index) => {
                 if (index === presetIndex)
-                    return { planets, geo, speed, rates };
+                    return { planets, geo, speed, rates, plasmaLevel };
                 return preset;
             });
 
             localStorage.setItem(
-                'ogam-presets',
+                LOCAL_STORAGE_KEYS.presets,
                 JSON.stringify({ presets: updatedPresets, presetIndex })
             );
         } else {
             localStorage.setItem(
-                'settings',
+                LOCAL_STORAGE_KEYS.settings,
                 JSON.stringify({ rates, geo, speed })
             );
-            localStorage.setItem('planets', JSON.stringify(planets));
+            localStorage.setItem(
+                LOCAL_STORAGE_KEYS.planets,
+                JSON.stringify(planets)
+            );
+            localStorage.setItem(
+                LOCAL_STORAGE_KEYS.plasma,
+                JSON.stringify(plasmaLevel)
+            );
         }
 
         this.setState({ nextBuilding: lowestAmortization, queue });
@@ -201,21 +246,31 @@ export default class Amortization extends Component {
 
     componentDidMount() {
         const { presets, presetIndex } = JSON.parse(
-            localStorage.getItem('ogam-presets')
+            localStorage.getItem(LOCAL_STORAGE_KEYS.presets)
         ) || { presets: [], presetIndex: null };
 
         const planets =
             presetIndex !== null
                 ? presets[presetIndex].planets
-                : JSON.parse(localStorage.getItem('planets')) || [];
+                : JSON.parse(
+                      localStorage.getItem(LOCAL_STORAGE_KEYS.planets)
+                  ) || [];
+
+        const plasmaLevel =
+            presetIndex !== null
+                ? presets[presetIndex].plasmaLevel
+                : JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEYS.plasma)) ||
+                  0;
 
         const { rates, geo, speed } =
             presetIndex != null
                 ? presets[presetIndex]
-                : JSON.parse(localStorage.getItem('settings')) || this.state;
+                : JSON.parse(
+                      localStorage.getItem(LOCAL_STORAGE_KEYS.settings)
+                  ) || this.state;
 
         this.setState(
-            { planets, rates, geo, speed, presets, presetIndex },
+            { planets, rates, geo, speed, presets, presetIndex, plasmaLevel },
             () => this.onUpdate()
         );
     }
@@ -403,10 +458,20 @@ export default class Amortization extends Component {
 
     updateSettings = settings => this.setState(settings, () => this.onUpdate());
 
+    cleanLocalStorage = (keysToIgnore = []) => {
+        const ignoredKeys = Array.isArray(keysToIgnore)
+            ? keysToIgnore
+            : Array(keysToIgnore);
+
+        Object.keys(LOCAL_STORAGE_KEYS).forEach(key => {
+            if (!ignoredKeys.includes(key)) localStorage.removeItem(key);
+        });
+    };
+
     addPreset = () => {
         if (this.state.presetIndex === null)
             this.setState(
-                ({ presets, planets, speed, rates, geo }) => {
+                ({ presets, planets, speed, rates, geo, plasmaLevel }) => {
                     const newPresets = [
                         ...presets,
                         {
@@ -414,6 +479,7 @@ export default class Amortization extends Component {
                             speed,
                             rates,
                             geo,
+                            plasmaLevel,
                         },
                     ];
 
@@ -422,8 +488,75 @@ export default class Amortization extends Component {
                         presetIndex: newPresets.length - 1,
                     };
                 },
-                () => this.onUpdate()
+                () => {
+                    this.onUpdate();
+                    this.cleanLocalStorage('presets');
+                }
             );
+    };
+
+    newPreset = () => {
+        this.setState(
+            {
+                planets: [],
+                speed: 1,
+                rates: { m: 2, c: 1, d: 1 },
+                geo: 0,
+                plasmaLevel: 0,
+                presetIndex: null,
+            },
+            this.onUpdate
+        );
+    };
+
+    handlePresetChange = presetIndex => {
+        this.setState(({ presets }) => {
+            const { plasmaLevel, planets, geo, rates, speed } = presets[
+                presetIndex
+            ];
+
+            return {
+                plasmaLevel,
+                planets,
+                geo,
+                rates,
+                speed,
+                presetIndex,
+            };
+        }, this.onUpdate);
+    };
+
+    deletePreset = () => {
+        this.setState(({ presets, presetIndex }) => {
+            presets.splice(presetIndex, 1);
+
+            if (presets.length) {
+                const newIndex = presets.length - 1;
+                const { plasmaLevel, planets, geo, rates, speed } = presets[
+                    newIndex
+                ];
+
+                return {
+                    plasmaLevel,
+                    presets,
+                    planets,
+                    geo,
+                    rates,
+                    speed,
+                    presetIndex: newIndex,
+                };
+            } else {
+                return {
+                    presets,
+                    presetIndex: null,
+                    plasmaLevel: 0,
+                    planets: [],
+                    geo: 1,
+                    rates: { m: 2, c: 1, d: 1 },
+                    speed: 1,
+                };
+            }
+        }, this.onUpdate);
     };
 
     render() {
@@ -439,8 +572,11 @@ export default class Amortization extends Component {
             rates,
             speed,
             geo,
+            presetIndex,
+            presets,
         } = this.state;
 
+        const isAPreset = presetIndex !== null;
         return (
             <React.Fragment>
                 <AddPlanetDialog
@@ -464,12 +600,26 @@ export default class Amortization extends Component {
                         >
                             Settings
                         </Button>
-                        <Button icon="heart" onClick={this.addPreset}>
-                            Save as preset
-                        </Button>
-                        <Button icon="plus" onClick={this.addPreset}>
-                            New
-                        </Button>
+                        {presets.length > 0 && (
+                            <Dropdown overlay={this.getPresetMenu()}>
+                                <Button icon="swap">Change Preset</Button>
+                            </Dropdown>
+                        )}
+                        {isAPreset && (
+                            <Button icon="delete" onClick={this.deletePreset}>
+                                Delete Preset
+                            </Button>
+                        )}
+                        {!isAPreset && (
+                            <Button icon="heart" onClick={this.addPreset}>
+                                Save as preset
+                            </Button>
+                        )}
+                        {isAPreset && (
+                            <Button icon="plus" onClick={this.newPreset}>
+                                New Preset
+                            </Button>
+                        )}
                         <Button
                             icon="global"
                             onClick={this.toggleAddPlanetDialog}
