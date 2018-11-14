@@ -31,6 +31,8 @@ import {
 
 import DownloadCsv from '../utils/download-csv';
 
+import fastForward from '../utils/fast-forward';
+
 import getBuildingQueue from '../utils/get-building-queue';
 import styled from 'styled-components';
 import { Planet } from '../components/planet';
@@ -559,6 +561,18 @@ export default class Amortization extends Component {
         }, this.onUpdate);
     };
 
+    fastForward = () => {
+        const { planets, plasmaLevel } = fastForward(this.state);
+
+        this.setState(
+            {
+                planets,
+                plasmaLevel: plasmaLevel ? plasmaLevel : this.state.plasmaLevel,
+            },
+            this.onUpdate
+        );
+    };
+
     render() {
         const {
             metalProductionIncrease,
@@ -626,6 +640,17 @@ export default class Amortization extends Component {
                         >
                             Add planet
                         </Button>
+                        {queue &&
+                            queue.length > 0 && (
+                                <Tooltip title="This Will Apply all the building upgrades from the `Generate Next Buildings List`">
+                                    <Button
+                                        icon="forward"
+                                        onClick={this.fastForward}
+                                    >
+                                        Fast Forward
+                                    </Button>
+                                </Tooltip>
+                            )}
                         <Button
                             icon="table"
                             onClick={() =>
