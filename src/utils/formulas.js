@@ -5,15 +5,15 @@ function pow(b, e) {
 }
 
 export function metalMineProd(level) {
-    return 30 * level * pow(1.1, level);
+    return Math.max(30, 30 * level * pow(1.1, level));
 }
 
 export function crysMineProd(level) {
-    return 20 * level * pow(1.1, level);
+    return Math.max(20, 20 * level * pow(1.1, level));
 }
 
 export function deutMineProd(level, avgT = 30) {
-    return 10 * level * pow(1.1, level) * (-0.004 * avgT + 1.36);
+    return Math.max(0, 10 * level * pow(1.1, level) * (-0.004 * avgT + 1.36));
 }
 
 export function newMetalProd(level) {
