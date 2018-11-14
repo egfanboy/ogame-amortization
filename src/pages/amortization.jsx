@@ -49,6 +49,8 @@ export default class Amortization extends Component {
         deutProductionIncrease: 0,
         showAddPlanetDialog: false,
         showSettingsDialog: false,
+        presets: [],
+        presetIndex: null,
     };
 
     toggleAddPlanetDialog = () =>
@@ -164,7 +166,7 @@ export default class Amortization extends Component {
     };
 
     onUpdate = () => {
-        const { planets, rates, geo, speed } = this.state;
+        const { planets, rates, geo, speed, presetIndex, presets } = this.state;
         const queue = getBuildingQueue(
             this.state.planets,
             this.calculateAmortizations,
@@ -173,17 +175,49 @@ export default class Amortization extends Component {
         );
         const amortizations = this.calculateAmortizations(planets);
         const lowestAmortization = this.getLowestAmortization(amortizations);
-        localStorage.setItem('settings', JSON.stringify({ rates, geo, speed }));
-        localStorage.setItem('planets', JSON.stringify(planets));
+
+        if (presetIndex !== null) {
+            console.log('here');
+            const updatedPresets = presets.map((preset, index) => {
+                if (index === presetIndex)
+                    return { planets, geo, speed, rates };
+                return preset;
+            });
+
+            localStorage.setItem(
+                'ogam-presets',
+                JSON.stringify({ presets: updatedPresets, presetIndex })
+            );
+        } else {
+            localStorage.setItem(
+                'settings',
+                JSON.stringify({ rates, geo, speed })
+            );
+            localStorage.setItem('planets', JSON.stringify(planets));
+        }
+
         this.setState({ nextBuilding: lowestAmortization, queue });
     };
 
     componentDidMount() {
-        const planets = JSON.parse(localStorage.getItem('planets')) || [];
-        const { rates, geo, speed } =
-            JSON.parse(localStorage.getItem('settings')) || this.state;
+        const { presets, presetIndex } = JSON.parse(
+            localStorage.getItem('ogam-presets')
+        ) || { presets: [], presetIndex: null };
 
-        this.setState({ planets, rates, geo, speed }, () => this.onUpdate());
+        const planets =
+            presetIndex !== null
+                ? presets[presetIndex].planets
+                : JSON.parse(localStorage.getItem('planets')) || [];
+
+        const { rates, geo, speed } =
+            presetIndex != null
+                ? presets[presetIndex]
+                : JSON.parse(localStorage.getItem('settings')) || this.state;
+
+        this.setState(
+            { planets, rates, geo, speed, presets, presetIndex },
+            () => this.onUpdate()
+        );
     }
 
     calculatePlasmaAmor = (plasmaLevel = this.state.plasmaLevel) => {
@@ -369,6 +403,29 @@ export default class Amortization extends Component {
 
     updateSettings = settings => this.setState(settings, () => this.onUpdate());
 
+    addPreset = () => {
+        if (this.state.presetIndex === null)
+            this.setState(
+                ({ presets, planets, speed, rates, geo }) => {
+                    const newPresets = [
+                        ...presets,
+                        {
+                            planets,
+                            speed,
+                            rates,
+                            geo,
+                        },
+                    ];
+
+                    return {
+                        presets: newPresets,
+                        presetIndex: newPresets.length - 1,
+                    };
+                },
+                () => this.onUpdate()
+            );
+    };
+
     render() {
         const {
             metalProductionIncrease,
@@ -406,6 +463,12 @@ export default class Amortization extends Component {
                             onClick={this.toggleSettingsDialog}
                         >
                             Settings
+                        </Button>
+                        <Button icon="heart" onClick={this.addPreset}>
+                            Save as preset
+                        </Button>
+                        <Button icon="plus" onClick={this.addPreset}>
+                            New
                         </Button>
                         <Button
                             icon="global"
