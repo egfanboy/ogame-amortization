@@ -40,7 +40,11 @@ import { Queue, QueueTitle } from '../components/queue';
 import { Plasma } from '../components/plasma';
 import getAmortizations from '../utils/get-amortizations';
 
-import { AddPlanetDialog, SettingsDialog } from '../components/dialogs';
+import {
+    AddPlanetDialog,
+    SettingsDialog,
+    RenamePresetDialog,
+} from '../components/dialogs';
 
 const BUILDING_TYPES = {
     m: 'Metal',
@@ -68,6 +72,7 @@ export default class Amortization extends Component {
         deutProductionIncrease: 0,
         showAddPlanetDialog: false,
         showSettingsDialog: false,
+        showRenamePresetDialog: false,
         presets: [],
         presetIndex: null,
     };
@@ -78,10 +83,8 @@ export default class Amortization extends Component {
                 this.handlePresetChange(+key.split('_').pop());
             }}
         >
-            {this.state.presets.map((_, index) => (
-                <Menu.Item key={`preset_${index}`}>
-                    Preset {index + 1}
-                </Menu.Item>
+            {this.state.presets.map((preset, index) => (
+                <Menu.Item key={`preset_${index}`}>{preset.name}</Menu.Item>
             ))}
         </Menu>
     );
@@ -220,7 +223,14 @@ export default class Amortization extends Component {
         if (presetIndex !== null) {
             const updatedPresets = presets.map((preset, index) => {
                 if (index === presetIndex)
-                    return { planets, geo, speed, rates, plasmaLevel };
+                    return {
+                        planets,
+                        geo,
+                        speed,
+                        rates,
+                        plasmaLevel,
+                        name: preset.name,
+                    };
                 return preset;
             });
 
@@ -482,6 +492,7 @@ export default class Amortization extends Component {
                             rates,
                             geo,
                             plasmaLevel,
+                            name: `Preset ${presets.length + 1}`,
                         },
                     ];
 
@@ -561,6 +572,18 @@ export default class Amortization extends Component {
         }, this.onUpdate);
     };
 
+    renamePreset = name => {
+        this.setState(({ presets, presetIndex }) => {
+            presets[presetIndex].name = name;
+            return { presets };
+        }, this.onUpdate);
+    };
+
+    toggleRenamePreset = () =>
+        this.setState({
+            showRenamePresetDialog: !this.state.showRenamePresetDialog,
+        });
+
     fastForward = () => {
         const { planets, plasmaLevel } = fastForward(this.state);
 
@@ -593,6 +616,12 @@ export default class Amortization extends Component {
         const isAPreset = presetIndex !== null;
         return (
             <React.Fragment>
+                <RenamePresetDialog
+                    preset={presets[presetIndex] || {}}
+                    renamePreset={this.renamePreset}
+                    visible={this.state.showRenamePresetDialog}
+                    toggleDialog={this.toggleRenamePreset}
+                />
                 <AddPlanetDialog
                     addPlanet={this.addPlanet}
                     visible={this.state.showAddPlanetDialog}
@@ -618,6 +647,14 @@ export default class Amortization extends Component {
                             <Dropdown overlay={this.getPresetMenu()}>
                                 <Button icon="swap">Change Preset</Button>
                             </Dropdown>
+                        )}
+                        {isAPreset && (
+                            <Button
+                                icon="edit"
+                                onClick={this.toggleRenamePreset}
+                            >
+                                Rename Preset
+                            </Button>
                         )}
                         {isAPreset && (
                             <Button icon="delete" onClick={this.deletePreset}>
