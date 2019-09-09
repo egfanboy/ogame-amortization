@@ -359,6 +359,18 @@ export default class Amortization extends Component {
             plasmaLevel
         );
 
+        const netMetalIncrease =
+            metalProductionIncrease -
+            metalPlasmaIncrease(accountMetalProd, plasmaLevel - 1);
+
+        const netCrystalIncrease =
+            crystalProductionIncrease -
+            crystalPlasmaIncrease(accountCrystalProd, plasmaLevel - 1);
+
+        const netDeutIncrease =
+            deutProductionIncrease -
+            deutPlasmaIncrease(accountDeutProd, plasmaLevel - 1);
+
         this.setState({
             metalProductionIncrease,
             crystalProductionIncrease,
@@ -369,13 +381,14 @@ export default class Amortization extends Component {
 
         const metalDeutRatio = d / m;
         const crysDeutRatio = d / c;
+
         const normalizedCost =
             metalCost * metalDeutRatio + crystalCost * crysDeutRatio + deutCost;
 
         const normalizedProductionIncrease =
-            metalProductionIncrease * metalDeutRatio +
-            crystalProductionIncrease * crysDeutRatio +
-            deutProductionIncrease;
+            netMetalIncrease * metalDeutRatio +
+            netCrystalIncrease * crysDeutRatio +
+            netDeutIncrease;
 
         const plasmaAmortization = amortization(
             normalizedCost,

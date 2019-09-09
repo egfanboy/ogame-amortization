@@ -1,6 +1,6 @@
 {
     "name": "ogame-amortization",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "private": true,
     "dependencies": {
         "antd": "^3.7.1",

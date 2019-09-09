@@ -11,6 +11,8 @@ import { Building } from '../building';
 import ReadOnly from './read-only';
 import Editable from './editable';
 
+const format = v => formatProduction(Math.ceil(v.toFixed(2)));
+
 export default class Plasma extends Component {
     state = { editing: false };
 
@@ -28,29 +30,29 @@ export default class Plasma extends Component {
             deutProductionIncrease,
         } = this.props;
 
+        const getIncrease = totalIncrease => {
+            const perLevelIncrease = totalIncrease / (level + 1);
+
+            return `${format(totalIncrease)} / ${format(perLevelIncrease)}`;
+        };
+
         const { metalCost, crystalCost, deutCost } = plasmaCost(level);
 
         return [
             {
                 res: 'Metal',
                 cost: formatCost(metalCost),
-                increase: formatProduction(
-                    Math.ceil(metalProductionIncrease.toFixed(2))
-                ),
+                increase: getIncrease(metalProductionIncrease),
             },
             {
                 res: 'Crystal',
                 cost: formatCost(crystalCost),
-                increase: formatProduction(
-                    Math.ceil(crystalProductionIncrease.toFixed(2))
-                ),
+                increase: getIncrease(crystalProductionIncrease),
             },
             {
                 res: 'Deut',
                 cost: formatCost(deutCost),
-                increase: formatProduction(
-                    Math.ceil(deutProductionIncrease.toFixed(2))
-                ),
+                increase: getIncrease(deutProductionIncrease),
             },
         ];
     };
@@ -87,7 +89,11 @@ export default class Plasma extends Component {
                 }
             >
                 <Building
-                    headings={['Resource', 'Cost', 'Production Increase']}
+                    headings={[
+                        'Resource',
+                        'Cost',
+                        'Production Increase (total/per lvl)',
+                    ]}
                     rows={this.buildRows()}
                 />
             </Card>
